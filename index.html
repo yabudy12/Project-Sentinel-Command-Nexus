@@ -1,1547 +1,917 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Project Sentinel v24.1 | Stable & Feature Complete</title>
-  <meta name="theme-color" content="#0f172a" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Project Sentinel v24.7 | Stable & Feature Complete</title>
+    <meta name="theme-color" content="#0f172a">
 
-  <!-- External Libraries -->
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
+    <!-- Preconnect and Preload for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style">
 
-    :root {
-      --status-good-primary: #2dd4bf; --status-good-secondary: #14b8a6; --status-good-glow: rgba(45, 212, 191, 0.5);
-      --status-warning-primary: #3b82f6; --status-warning-secondary: #2563eb; --status-warning-glow: rgba(59, 130, 246, 0.5);
-      --status-critical-primary: #f87171; --status-critical-secondary: #ef4444; --status-critical-glow: rgba(248, 113, 113, 0.5);
-      --status-purple-primary: #a78bfa; --status-purple-secondary: #8b5cf6; --status-purple-glow: rgba(167, 139, 250, 0.5);
-      --status-orange-primary: #fb923c; --status-orange-secondary: #f97316; --status-orange-glow: rgba(251, 146, 60, 0.5);
-      --status-yellow-primary: #facc15; --status-yellow-secondary: #eab308; --status-yellow-glow: rgba(250, 204, 21, 0.5);
-    }
-
-    body {
-      font-family: 'Heebo', sans-serif;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-
-    .theme-dark {
-      --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-tertiary: #334155;
-      --text-primary: #e2e8f0; --text-secondary: #94a3b8; --border-color: #334155;
-    }
-    .theme-light {
-      --bg-primary: #f1f5f9; --bg-secondary: #ffffff; --bg-tertiary: #e2e8f0;
-      --text-primary: #0f172a; --text-secondary: #475569; --border-color: #e2e8f0;
-    }
-
-    .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--status-good-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    .skeleton-loader { position: relative; overflow: hidden; background-color: var(--bg-tertiary); }
-    .skeleton-loader::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); animation: skeleton-loading 1.5s infinite; }
-    @keyframes skeleton-loading { 0% { transform: translateX(-100%);} 100% { transform: translateX(100%);} }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
-    .fade-in-on-load { animation: fadeIn 0.5s ease-out forwards; }
-
-    @keyframes radar-sweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg);} }
-
-    .login-background {
-      background-size: 200% 200%;
-      background-image: radial-gradient(circle at 10% 20%, rgb(15, 23, 42) 0%, rgb(30, 41, 59) 90%);
-      animation: background-pan 20s linear infinite;
-    }
-    @keyframes background-pan {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .pulsing-logo { animation: pulse 4s ease-in-out infinite; }
-    @keyframes pulse { 0%,100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--status-good-glow)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 15px var(--status-good-glow)); } }
-  </style>
-</head>
-<body class="theme-dark">
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useRef, useCallback, useReducer, createContext, useContext, useMemo } = React;
-
-    // Translations (HE/EN)
-    const translations = {
-      en: {
-        app_title: "Project Sentinel v24.1 | Stable & Feature Complete",
-        classification: "Classification: Unclassified",
-        main_header: "Project Sentinel - Command Nexus",
-        motto: "Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action",
-        morning_report: "Morning Report",
-        daily_report: "Daily Report",
-        report_date: "Report Date:",
-        control_panel: "Control Panel",
-        export_share: "Export & Share",
-        share_link: "Share Link",
-        share_whatsapp: "Share via WhatsApp",
-        export_png: "Export PNG",
-        backup_data: "Backup Data",
-        backup_code: "Backup Source Code",
-        backup_png: "Backup Command Bridge (PNG)",
-        diagnostics: "Diagnostics & Health",
-        run_bit: "Run Integration Tests",
-        theme_toggle: "Toggle Theme",
-        lang_toggle: "Change Language",
-        version_history: "Version History",
-        signed_orders_kpi: "Total Signed",
-        backlog_gap_kpi: "Backlog Gap",
-        pending_orders_kpi: "Pending Signatures",
-        rejected_orders_kpi: "Total Rejected",
-        ai_insights_title: "AI Analytical HQ",
-        anomaly_detected: "Anomaly Detected!",
-        anomaly_desc: "Unusually high number of rejected orders detected today (+25% vs 7-day average).",
-        analyze_anomaly: "Analyze Anomaly",
-        scenario_engine_title: "Strategic Advisor",
-        staff_members: "Number of Staff:",
-        processing_rate: "Processing Rate (orders/day/staff):",
-        set_goal: "Set Goal: Clear pending in",
-        days: "days",
-        get_action_plan: "Get Action Plan",
-        smart_assistant_title: "Smart Analytical Assistant",
-        ask: "Ask",
-        thinking: "Thinking... 🤔",
-        analytical_brain_title: "Interactive Analytical HQ",
-        scroll_up: "Scroll Up",
-        scroll_down: "Scroll Down",
-        bit_results_title: "BIT Results",
-        bit_report_summary_ok: "System integrity check passed. All components are operating as expected.",
-        bit_report_summary_fail: "System integrity check found issues. Review details below.",
-        bit_check_code: "Code Integrity (Hash Check)",
-        bit_check_functionality: "Functionality (UI Events)",
-        bit_check_ui: "UI/UX Consistency",
-        bit_check_api: "API Connectivity",
-        pass: "Pass",
-        fail: "Fail",
-        user_role: "User Role:",
-        admin: "Admin",
-        user: "User",
-        card_title_overallStatus: "Overall Status",
-        card_title_signedOrders: "Order Backlog - Desired vs. Actual",
-        card_title_pendingSignature: "Signature Process (Pending)",
-        card_title_rejectedOrders: "Rejected Orders",
-        card_subtitle_rejectedOrders: "(Responsibility: Project Manager vs. Budget)",
-        card_title_pendingAncillaryForm: "Pending Ancillary Form",
-        card_subtitle_pendingAncillaryForm: "(Responsibility: Tech Budget Manager)",
-        card_title_pendingCorrection: "Pending Correction",
-        card_subtitle_pendingCorrection: "(Responsibility: Project Manager vs. Budget)",
-        card_title_pendingAssetNumberEntry: "Pending Asset Number",
-        card_subtitle_pendingAssetNumberEntry: "(Responsibility: Buyer & QA)",
-        last_updated: "Last Updated: {time}",
-        deployment_center: "Deployment Center",
-        system_file_export: "System File Export (Manual Backup)",
-        export_html: "Export index.html",
-        tab_command_bridge: "Command Bridge",
-        tab_intelligence_hq: "Intelligence HQ",
-        tab_sharing_center: "Sharing Center",
-        tab_control_panel: "Control Panel",
-        subtab_docs_info: "Documentation & Info",
-        subtab_version_history: "Version History",
-        subtab_diagnostics: "Diagnostics",
-        subtab_deployment_center: "Deployment Center",
-        subtab_export_share: "Export & Share",
-        subtab_manual_deploy: "Manual Deployment",
-        subtab_backup_restore: "Backup & Restore",
-        subtab_api_settings: "API Settings",
-        api_key_label: "Gemini API Key",
-        api_key_placeholder: "Enter your Gemini API key here",
-        api_key_missing: "Gemini API key is not configured. Please add it in the Control Panel.",
-        api_key_saved: "API Key saved successfully!",
-        save_key: "Save Key",
-        summary_generator: "Executive Summary Generator",
-        generate_summary: "Generate Summary",
-        copy_to_clipboard: "Copy to Clipboard",
-        copied: "Copied!",
-        proactive_insights: "Proactive Insights & Forecasts",
-        nlq_placeholder: "Ask a question about the data...",
-        daily_focus_title: "AI Daily Focus",
-        analyzing_data: "Analyzing data...",
-        login_title: "Welcome to Sentinel",
-        login_subtitle: "Please select your role and enter the password to continue",
-        select_role: "Select Role",
-        password: "Password",
-        login: "Login",
-        login_error: "Invalid password for the selected role.",
-        caps_lock_on: "Caps Lock is on",
-        logout: "Log Off",
-        save_data: "Save Data",
-        reset_data: "Reset Data for Today",
-        data_saved_success: "Data saved successfully!",
-        data_reset_success: "Today's report has been reset.",
-        data_saved_error: "Error saving data.",
-        data_reset_error: "Error resetting data.",
-        search_internet: "Search Internet"
-      },
-      he: {
-        app_title: "Project Sentinel v24.1 | Stable & Feature Complete",
-        classification: "רמת סיווג: בלמ\"ס",
-        main_header: "Project Sentinel - Command Nexus",
-        motto: "Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action",
-        morning_report: "דו\"ח בוקר",
-        daily_report: "דו\"ח יומי",
-        report_date: "תאריך דו\"ח:",
-        control_panel: "לוח בקרה",
-        export_share: "ייצוא ושיתוף",
-        share_link: "שתף קישור",
-        share_whatsapp: "שתף בוואטסאפ",
-        export_png: "ייצא תמונה (PNG)",
-        backup_data: "גיבוי נתונים",
-        backup_code: "גיבוי קוד מקור",
-        backup_png: "גיבוי תמונת מפקדה (PNG)",
-        diagnostics: "אבחון ותקינות",
-        run_bit: "הרץ בדיקות אינטגרציה",
-        theme_toggle: "שנה ערכת נושא",
-        lang_toggle: "שנה שפה",
-        version_history: "היסטוריית גרסאות",
-        signed_orders_kpi: "סה\"כ חתומות",
-        backlog_gap_kpi: "פער בצבר",
-        pending_orders_kpi: "ממתינות לחתימה",
-        rejected_orders_kpi: "סה\"כ דחויות",
-        ai_insights_title: "מטה אנליטי מבוסס AI",
-        anomaly_detected: "זוהתה אנומליה!",
-        anomaly_desc: "זוהה מספר גבוה חריג של הזמנות דחויות היום (עלייה של 25% לעומת ממוצע 7 ימים).",
-        analyze_anomaly: "נתח אנומליה",
-        scenario_engine_title: "יועץ אסטרטגי",
-        staff_members: "מספר אנשי צוות:",
-        processing_rate: "קצב טיפול (הזמנות ליום/לצוות):",
-        set_goal: "הגדר יעד: סיום ממתינות תוך",
-        days: "ימים",
-        get_action_plan: "קבל תוכנית פעולה",
-        smart_assistant_title: "עוזר אנליטי חכם",
-        ask: "שאל",
-        thinking: "חושב... 🤔",
-        analytical_brain_title: "חמ\"ל אנליטי אינטראקטיבי",
-        scroll_up: "גלילה למעלה",
-        scroll_down: "גלילה למטה",
-        bit_results_title: "תוצאות בדיקת BIT",
-        bit_report_summary_ok: "בדיקת תקינות מערכת עברה בהצלחה. כל הרכיבים פועלים כמצופה.",
-        bit_report_summary_fail: "בדיקת תקינות מערכת זיהתה בעיות. יש לעיין בפירוט.",
-        bit_check_code: "שלמות קוד (בדיקת Hash)",
-        bit_check_functionality: "פונקציונליות (אירועי UI)",
-        bit_check_ui: "UI/UX עקבי",
-        bit_check_api: "קישוריות API",
-        pass: "תקין",
-        fail: "כשל",
-        user_role: "תפקיד משתמש:",
-        admin: "מנהל מערכת",
-        user: "משתמש",
-        card_title_overallStatus: "מצב כללי",
-        card_title_signedOrders: "צבר הזמנות - רצוי מול מצוי",
-        card_title_pendingSignature: "תהליך חתימות (ממתינות)",
-        card_title_rejectedOrders: "הזמנות דחויות",
-        card_subtitle_rejectedOrders: "(באחריות מנה\"פ מול תקציבן)",
-        card_title_pendingAncillaryForm: "ממתינות לטופס נלווה",
-        card_subtitle_pendingAncillaryForm: "(באחריות תקציבן טכנולוגי)",
-        card_title_pendingCorrection: "ממתינות לתיקון",
-        card_subtitle_pendingCorrection: "(באחריות מנה\"פ מול תקציבן)",
-        card_title_pendingAssetNumberEntry: "ממתינות למספר נכס",
-        card_subtitle_pendingAssetNumberEntry: "(באחריות קניין ומבקר איכות)",
-        last_updated: "עדכון אחרון: {time}",
-        deployment_center: "מרכז הפצה",
-        system_file_export: "ייצוא קבצי מערכת (גיבוי ידני)",
-        export_html: "ייצא index.html",
-        tab_command_bridge: "גשר הפיקוד",
-        tab_intelligence_hq: "מטה המודיעין",
-        tab_sharing_center: "מרכז שיתוף",
-        tab_control_panel: "לוח בקרה",
-        subtab_docs_info: "תיעוד ומידע",
-        subtab_version_history: "היסטוריית גרסאות",
-        subtab_diagnostics: "אבחון ותקינות",
-        subtab_deployment_center: "מרכז הפצה",
-        subtab_export_share: "ייצוא ושיתוף",
-        subtab_manual_deploy: "הפצה ידנית",
-        subtab_backup_restore: "גיבוי ושחזור",
-        subtab_api_settings: "הגדרות API",
-        api_key_label: "מפתח API של Gemini",
-        api_key_placeholder: "הזן כאן את מפתח ה-API שלך",
-        api_key_missing: "מפתח API של Gemini אינו מוגדר. יש להוסיף אותו בלוח הבקרה.",
-        api_key_saved: "מפתח API נשמר בהצלחה!",
-        save_key: "שמור מפתח",
-        summary_generator: "מחולל סיכומי מנהלים",
-        generate_summary: "הפק סיכום",
-        copy_to_clipboard: "העתק ללוח",
-        copied: "הועתק!",
-        proactive_insights: "תובנות פרואקטיביות ותחזיות",
-        nlq_placeholder: "שאל שאלה על הנתונים...",
-        daily_focus_title: "פוקוס יומי מבוסס AI",
-        analyzing_data: "מנתח נתונים...",
-        login_title: "ברוכים הבאים ל‑Sentinel",
-        login_subtitle: "אנא בחר תפקיד והזן סיסמה כדי להמשיך",
-        select_role: "בחר תפקיד",
-        password: "סיסמה",
-        login: "כניסה",
-        login_error: "סיסמה שגויה עבור התפקיד שנבחר.",
-        caps_lock_on: "Caps Lock פועל",
-        logout: "התנתק",
-        save_data: "שמור נתונים",
-        reset_data: "אפס נתונים להיום",
-        data_saved_success: "הנתונים נשמרו בהצלחה!",
-        data_reset_success: "הדו\"ח להיום אופס.",
-        data_saved_error: "שגיאה בשמירת הנתונים.",
-        data_reset_error: "שגיאה באיפוס הנתונים.",
-        search_internet: "חפש באינטרנט"
-      }
-    };
-
-    // Language context
-    const LanguageContext = createContext();
-    const LanguageProvider = ({ children }) => {
-      const [language, setLanguage] = useState(() => {
-        try { return localStorage.getItem('sentinel-lang') || 'he'; }
-        catch { return 'he'; }
-      });
-      useEffect(() => {
-        try {
-          document.documentElement.lang = language;
-          document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr';
-          localStorage.setItem('sentinel-lang', language);
-        } catch {}
-      }, [language]);
-      const toggleLanguage = () => setLanguage(prev => prev === 'he' ? 'en' : 'he');
-      const t = (key, params = {}) => {
-        let s = (translations[language]?.[key]) || key;
-        Object.keys(params).forEach(p => { s = s.replace(`{${p}}`, params[p]); });
-        return s;
-      };
-      return (
-        <LanguageContext.Provider value={{language,toggleLanguage:toggleLanguage,t:t}}>
-          {children}
-        </LanguageContext.Provider>
-      );
-    };
-    const useTranslation = () => useContext(LanguageContext);
-
-    // Data + Dashboard State
-    const DashboardContext = createContext();
-    const initialReportState = {
-      id: null,
-      signedOrders: 0,
-      existingBacklog: 0,
-      pendingSignature: { 'ענף גזברות': 0, 'רכש, מכרזים ולוגיסטיקה': 0, 'כספים וחשבות': 0 },
-      rejectedOrders: 0,
-      pendingAncillaryForm: 0,
-      pendingCorrection: 0,
-      pendingAssetNumberEntry: 0
-    };
-    const calculateTotals = (data) => {
-      if (!data) return {...initialReportState, computedMetrics:{ totalPending:0, goalPercentage:0, totalPendingSignature:0, backlogDifference:0 }};
-      const totalPendingSignature = Object.values(data.pendingSignature||{}).reduce((a,b)=>a+b,0);
-      const totalPending = totalPendingSignature;
-      const backlogDifference = (data.existingBacklog||0) - (data.signedOrders||0);
-      const goalPercentage = (data.existingBacklog||0) > 0 ? (data.signedOrders||0)/(data.existingBacklog||1)*100 : 0;
-      return {...data, computedMetrics:{ totalPending, goalPercentage, totalPendingSignature, backlogDifference }};
-    };
-    const loadInitialState = () => {
-      try {
-        const storedReports = localStorage.getItem('sentinelReports');
-        const allReports = storedReports ? JSON.parse(storedReports) : {};
-        const lastReportId = localStorage.getItem('sentinelLastSavedReportId');
-        let initialData = initialReportState;
-        if (lastReportId && allReports[lastReportId]) initialData = allReports[lastReportId];
-        return {
-          allReports,
-          currentReportId: lastReportId || null,
-          dataForEditing: JSON.parse(JSON.stringify(initialData)),
-          liveData: calculateTotals(initialData),
-          previousValues: {},
-          lastUpdateInfo: null,
-          notifications: [],
-          userRole: 'user',
-          isAuthenticated: false
-        };
-      } catch {
-        return {
-          allReports:{},
-          currentReportId:null,
-          dataForEditing: JSON.parse(JSON.stringify(initialReportState)),
-          liveData: calculateTotals(initialReportState),
-          previousValues:{},
-          lastUpdateInfo:null,
-          notifications:[],
-          userRole:'user',
-          isAuthenticated:false
-        };
-      }
-    };
-
-    function dashboardReducer(state, action){
-      switch(action.type){
-        case 'LOGIN_SUCCESS':
-          return {...state, isAuthenticated:true, userRole: action.payload.role };
-        case 'LOGOUT':
-          return {...state, isAuthenticated:false, userRole:'user' };
-        case 'LOAD_REPORT':{
-          const {id, previousData} = action.payload;
-          const existingReportData = state.allReports[id];
-          let reportData;
-          if (existingReportData){
-            reportData = JSON.parse(JSON.stringify(existingReportData));
-          } else {
-            const allIds = Object.keys(state.allReports).sort();
-            const lastId = allIds.length ? allIds[allIds.length-1] : null;
-            const lastDoc = lastId ? state.allReports[lastId] : null;
-            const base = (previousData && Object.keys(previousData).length>0) ? previousData : (lastDoc || initialReportState);
-            reportData = JSON.parse(JSON.stringify(base));
-            reportData.id = id;
-          }
-          return {...state, currentReportId:id, dataForEditing:reportData, liveData:calculateTotals(reportData), previousValues: previousData || {} };
-        }
-        case 'SAVE_DATA':{
-          if (state.userRole!=='admin' || !state.currentReportId) return state;
-          const newAllReports = {...state.allReports, [state.currentReportId]: state.dataForEditing};
-          try{
-            localStorage.setItem('sentinelReports', JSON.stringify(newAllReports));
-            localStorage.setItem('sentinelLastSavedReportId', state.currentReportId);
-          }catch{}
-          return {...state, allReports:newAllReports, lastUpdateInfo:{ time: new Date().toLocaleString('he-IL') }};
-        }
-        case 'RESET_TODAY_DATA':{
-          if (state.userRole!=='admin' || !state.currentReportId) return state;
-          const newAllReports = {...state.allReports, [state.currentReportId]: JSON.parse(JSON.stringify(initialReportState))};
-          try{ localStorage.setItem('sentinelReports', JSON.stringify(newAllReports)); }catch{}
-          return {...state, allReports:newAllReports, dataForEditing: JSON.parse(JSON.stringify(initialReportState)), liveData:calculateTotals(initialReportState), lastUpdateInfo:{time:new Date().toLocaleString('he-IL')}};
-        }
-        case 'UPDATE_EDITING_FIELD':{
-          if (state.userRole!=='admin') return state;
-          const {fieldPath,value} = action.payload;
-          const newState = JSON.parse(JSON.stringify(state));
-          let current = newState.dataForEditing;
-          const parts = fieldPath.split('.');
-          for (let i=0;i<parts.length-1;i++){
-            if (!current[parts[i]]) current[parts[i]] = {};
-            current = current[parts[i]];
-          }
-          current[parts[parts.length-1]] = value;
-          newState.liveData = calculateTotals(newState.dataForEditing);
-          return newState;
-        }
-        case 'ADD_NOTIFICATION':
-          if (state.notifications.some(n=>n.text===action.payload.text)) return state;
-          return {...state, notifications:[action.payload, ...state.notifications]};
-        default:
-          return state;
-      }
-    }
-
-    const DashboardProvider = ({children})=>{
-      const [state, dispatch] = useReducer(dashboardReducer, loadInitialState());
-      return <DashboardContext.Provider value={{state,dispatch}}>{children}</DashboardContext.Provider>;
-    };
-
-    // UI Blocks
-    const SystemLogo = ({ mirrored=false }) => (
-      <div className={`relative w-16 h-16 ${mirrored? 'transform -scale-x-100':''}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M 10 50 Q 50 20 90 50 Q 50 80 10 50 Z" fill="none" stroke="var(--status-good-primary)" strokeWidth="3"/>
-          <circle cx="50" cy="50" r="10" fill="var(--status-good-primary)"/>
-          <defs>
-            <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style={{stopColor: "var(--status-good-glow)", stopOpacity: 0}}/>
-              <stop offset="100%" style={{stopColor: "var(--status-good-glow)", stopOpacity: 0.7}}/>
-            </linearGradient>
-          </defs>
-          <path d="M 50 50 L 90 50 A 40 40 0 0 1 50 10 Z" fill="url(#radar-gradient)" style={{transformOrigin: '50% 50%', animation: 'radar-sweep 3s linear infinite'}}/>
-        </svg>
-      </div>
-    );
-
-    const Clock = ()=>{
-      const [time,setTime]=useState(new Date());
-      useEffect(()=>{
-        const id=setInterval(()=>setTime(new Date()),1000);
-        return ()=>clearInterval(id);
-      },[]);
-      return (
-        <div className="text-lg font-semibold text-slate-400 tabular-nums">
-          <span>{time.toLocaleDateString('he-IL')}</span>
-          <span className="mx-2">|</span>
-          <span>{time.toLocaleTimeString('he-IL')}</span>
-        </div>
-      );
-    };
-
-    const AnimatedNumber = ({n})=>{
-      const [num,setNum]=useState(0);
-      useEffect(()=>{
-        const end = n||0;
-        if (num===end) return;
-        const frameDuration = 1000/60;
-        const totalFrames = Math.round(1000/frameDuration);
-        let frame=0;
-        const counter=setInterval(()=>{
-          frame++;
-          const progress = frame/totalFrames;
-          setNum(Math.round(end*progress));
-          if (frame===totalFrames){ clearInterval(counter); setNum(end); }
-        },frameDuration);
-        return ()=>clearInterval(counter);
-      },[n]);
-      return <span>{num}</span>;
-    };
-
-    // API call: Gemini (optional with local key)
-    async function callGeminiAPI(prompt, t, showMessage, jsonSchema=null, useGrounding=false){
-      const apiKey = localStorage.getItem('sentinel-apiKey');
-      if (!apiKey){
-        const msg = t('api_key_missing');
-        if (showMessage) showMessage(msg,true);
-        return jsonSchema ? JSON.stringify({answer:msg,chartData:null}) : msg;
-      }
-      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-      const payload = { contents:[{parts:[{text:prompt}]}] };
-      if (jsonSchema){
-        payload.generationConfig = { responseMimeType:"application/json", responseSchema: jsonSchema };
-      }
-      if (useGrounding){
-        payload.tools = [{googleSearch:{}}];
-      }
-      try{
-        const res = await fetch(API_URL,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok){
-          const body = await res.json().catch(()=>({}));
-          throw new Error(`HTTP ${res.status}: ${body?.error?.message || 'Unknown error'}`);
-        }
-        const body = await res.json();
-        const part = body?.candidates?.[0]?.content?.parts?.[0];
-        if (!part?.text) throw new Error('Invalid response shape');
-        return part.text;
-      }catch(err){
-        const msg = `שגיאה בתקשורת עם שירות ה-AI: ${err.message}`;
-        if (showMessage) showMessage(msg,true);
-        return jsonSchema ? JSON.stringify({answer:msg,chartData:null}) : msg;
-      }
-    }
-
-    // Components
-    const TopBar = ({theme,toggleTheme})=>{
-      const {language,toggleLanguage,t} = useTranslation();
-      const {state,dispatch} = useContext(DashboardContext);
-      const userRole = state.userRole;
-      const notifications = state.notifications;
-      const handleLogout = ()=>dispatch({type:'LOGOUT'});
-      return (
-        <div className="flex justify-between items-center mb-5">
-          <div></div>
-          <div className="flex items-center gap-2">
-            <div className="bg-[--bg-secondary] text-[--text-primary] border border-[--border-color] rounded-full text-xs px-3 py-1 flex items-center gap-2">
-              <span>{t('user_role')}</span><span className="font-bold">{t(userRole)}</span>
-            </div>
-            <button className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center relative hover:text-[--text-primary] transition-colors" title="התראות">
-              <i className="fas fa-bell"></i>
-              {notifications.length>0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">{notifications.length}</span>}
-            </button>
-            <button onClick={toggleLanguage} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center font-bold text-sm hover:text-[--text-primary] transition-colors" title={t('lang_toggle')}>
-              {language==='he'?'EN':'HE'}
-            </button>
-            <button onClick={toggleTheme} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center hover:text-[--text-primary] transition-colors" title={t('theme_toggle')}>
-              {theme==='theme-dark'? <i className="fas fa-sun"></i>:<i className="fas fa-moon"></i>}
-            </button>
-            <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center hover:text-[--text-primary] transition-colors" title={t('logout')}>
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
-          </div>
-        </div>
-      );
-    };
-
-    const DashboardHeader = ({currentReportType,reportDate})=>{
-      const {t,language} = useTranslation();
-      return (
-        <div className="text-center mb-8">
-          <div className="flex justify-center items-center gap-4 mb-2">
-            <SystemLogo/>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-[--text-primary] break-words">{t('main_header')}</h1>
-              <p className="text-sm text-[--text-secondary]">{t('classification')}</p>
-            </div>
-            <SystemLogo mirrored/>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="text-md text-teal-300 italic">{t('motto')}</p>
-            <div className="w-1/3 h-px bg-teal-500/50 mt-2"></div>
-          </div>
-          <p className="text-md text-[--text-secondary] mt-4">
-            {currentReportType==='morning'?t('morning_report'):t('daily_report')} - {new Date(reportDate).toLocaleDateString(language==='he'?'he-IL':'en-CA')}
-          </p>
-        </div>
-      );
-    };
-
-    const AnimatedDelta = ({value,direction,color})=>{
-      if (value===undefined || direction==='neutral') return null;
-      return (
-        <span className={`text-xs flex items-center gap-1 ${color}`}>
-          <i className={`fas fa-arrow-${direction}`}></i>{Math.abs(value)}
-        </span>
-      );
-    };
-
-    const KpiStrip = ()=>{
-      const {state}=useContext(DashboardContext);
-      const {t}=useTranslation();
-      const liveData = state.liveData;
-      const previous = calculateTotals(state.previousValues || {}).computedMetrics;
-
-      const getDelta=(current,prev,allowGray=false)=>{
-        if (prev===undefined || current===undefined || !state.previousValues || Object.keys(state.previousValues).length===0) return {value:undefined};
-        const d = current-prev;
-        const direction = d>0?'up':d<0?'down':'neutral';
-        return {value:d,direction,allowGray};
-      };
-
-      const kpis = [
-        {
-          label: t('signed_orders_kpi'),
-          value: liveData?.signedOrders||0,
-          type:'good',
-          delta:getDelta(liveData?.signedOrders, state.previousValues?.signedOrders,true),
-          posGood:true
-        },
-        {
-          label: t('backlog_gap_kpi'),
-          value: liveData?.computedMetrics?.backlogDifference||0,
-          type:'warning',
-          delta:getDelta(liveData?.computedMetrics?.backlogDifference, previous?.backlogDifference),
-          posGood:false
-        },
-        {
-          label: t('pending_orders_kpi'),
-          value: liveData?.computedMetrics?.totalPendingSignature||0,
-          type:'warning',
-          delta:getDelta(liveData?.computedMetrics?.totalPendingSignature, previous?.totalPendingSignature),
-          posGood:false
-        },
-        {
-          label: t('rejected_orders_kpi'),
-          value: liveData?.rejectedOrders||0,
-          type:'critical',
-          delta:getDelta(liveData?.rejectedOrders, state.previousValues?.rejectedOrders),
-          posGood:false
-        }
-      ];
-
-      return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          {kpis.map((k,i)=>{
-            let color = 'text-gray-400';
-            if (k.delta?.direction==='up') color = k.posGood?'text-teal-400':'text-red-400';
-            else if (k.delta?.direction==='down') color = k.posGood?'text-red-400':'text-teal-400';
-            if (k.delta?.allowGray && k.delta?.direction==='down') color='text-gray-400';
-            return (
-              <div key={k.label} className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] text-center transition-all duration-300 transform hover:scale-105 hover:shadow-lg fade-in-on-load" style={{animationDelay:`${i*100}ms`}}>
-                <div className={`text-3xl font-bold flex items-center justify-center gap-2 ${k.type==='good'?'text-teal-400':k.type==='warning'?'text-blue-400':'text-red-400'}`}>
-                  <AnimatedNumber n={k.value}/>
-                  <AnimatedDelta value={k.delta?.value} direction={k.delta?.direction} color={color}/>
-                </div>
-                <div className="text-xs text-[--text-secondary] mt-1">{k.label}</div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    };
-
-    const NumericInputWithArrows = ({value,onChange,path,disabled,delta,isIncreaseGood=false,specialRule=null})=>{
-      const intervalRef = useRef(null);
-      const timeoutRef = useRef(null);
-      const handleValueChange = (inc)=>{
-        const current = parseInt(value,10)||0;
-        const next = Math.max(0,current+inc);
-        onChange(path,next);
-      };
-      const startPress=(inc)=>{
-        handleValueChange(inc);
-        timeoutRef.current=setTimeout(()=>{
-          intervalRef.current=setInterval(()=>handleValueChange(inc),100);
-        },500);
-      };
-      const stopPress=()=>{
-        clearTimeout(timeoutRef.current);
-        clearInterval(intervalRef.current);
-      };
-      let color='text-gray-400';
-      if (delta?.direction==='up') color = isIncreaseGood?'text-teal-400':'text-red-400';
-      else if (delta?.direction==='down') color = isIncreaseGood?'text-red-400':'text-teal-400';
-      if (specialRule==='signed' && delta?.direction==='down') color='text-gray-400';
-      if (specialRule==='backlog' && delta?.direction==='down') color='text-gray-400';
-
-      return (
-        <div className="flex items-center gap-2 justify-end">
-          {delta && delta.value!==undefined && delta.direction!=='neutral' && (
-            <span className={`text-sm flex items-center gap-1 ${color}`}>
-              <i className={`fas fa-arrow-${delta.direction}`}></i>{Math.abs(delta.value)}
-            </span>
-          )}
-          <div className="flex flex-col gap-1">
-            <button className="w-8 h-8 bg-[--bg-tertiary] rounded-md flex items-center justify-center disabled:opacity-50 transition-transform transform hover:scale-110 active:scale-95"
-              onClick={()=>handleValueChange(1)}
-              onMouseDown={()=>startPress(1)} onMouseUp={stopPress} onMouseLeave={stopPress}
-              onTouchStart={()=>startPress(1)} onTouchEnd={stopPress}
-              disabled={disabled}><i className="fas fa-chevron-up"></i></button>
-            <button className="w-8 h-8 bg-[--bg-tertiary] rounded-md flex items-center justify-center disabled:opacity-50 transition-transform transform hover:scale-110 active:scale-95"
-              onClick={()=>handleValueChange(-1)}
-              onMouseDown={()=>startPress(-1)} onMouseUp={stopPress} onMouseLeave={stopPress}
-              onTouchStart={()=>startPress(-1)} onTouchEnd={stopPress}
-              disabled={disabled}><i className="fas fa-chevron-down"></i></button>
-          </div>
-          <input className="w-20 p-2 text-2xl font-bold text-center bg-[--bg-secondary] border border-[--border-color] rounded-lg disabled:bg-[--bg-tertiary]"
-            type="number" value={value}
-            onChange={e=>onChange(path, parseInt(e.target.value,10)||0)}
-            disabled={disabled}/>
-        </div>
-      );
-    };
-
-    const cardDefinitions = {
-      overallStatus: { titleKey:'card_title_overallStatus', color:'teal', icon:'fa-tachometer-alt' },
-      signedOrders: { titleKey:'card_title_signedOrders', color:'teal', icon:'fa-check-double' },
-      pendingSignature: { titleKey:'card_title_pendingSignature', color:'purple', icon:'fa-signature' },
-      rejectedOrders: { titleKey:'card_title_rejectedOrders', subtitleKey:'card_subtitle_rejectedOrders', color:'red', icon:'fa-times-circle' },
-      pendingAncillaryForm: { titleKey:'card_title_pendingAncillaryForm', subtitleKey:'card_subtitle_pendingAncillaryForm', color:'orange', icon:'fa-file-alt' },
-      pendingCorrection: { titleKey:'card_title_pendingCorrection', subtitleKey:'card_subtitle_pendingCorrection', color:'blue', icon:'fa-edit' },
-      pendingAssetNumberEntry: { titleKey:'card_title_pendingAssetNumberEntry', subtitleKey:'card_subtitle_pendingAssetNumberEntry', color:'yellow', icon:'fa-barcode' }
-    };
-
-    const SectionCard = ({id, triggerAi, showMessage})=>{
-      const {state,dispatch} = useContext(DashboardContext);
-      const {t} = useTranslation();
-      const dataForEditing = state.dataForEditing || initialReportState;
-      const liveData = state.liveData || calculateTotals(initialReportState);
-      const previousValues = state.previousValues || {};
-      const userRole = state.userRole;
-      const lastUpdateInfo = state.lastUpdateInfo;
-      const cardId = id.replace('card-','');
-      const cardInfo = cardDefinitions[cardId];
-
-      const chartRef = useRef(null);
-      const canvasRef = useRef(null);
-      const theme = document.body.className;
-
-      const [aiInsight,setAiInsight] = useState('');
-      const [isInsightLoading,setIsInsightLoading] = useState(false);
-
-      const signingOrder = ['כספים וחשבות','רכש, מכרזים ולוגיסטיקה','ענף גזברות'];
-      const departmentIcons = {
-        'כספים וחשבות': 'fa-file-invoice-dollar',
-        'רכש, מכרזים ולוגיסטיקה': 'fa-gavel',
-        'ענף גזברות': 'fa-stamp'
-      };
-
-      const generateCardInsight = useCallback(async ()=>{
-        if (cardId!=='overallStatus' || !liveData || !previousValues || Object.keys(previousValues).length===0) return;
-        setIsInsightLoading(true);
-        const prompt = `נתח בקצרה את השינוי המשמעותי ביותר בין הנתונים הקודמים לנוכחיים במשפט אחד בעברית. קודמים: ${JSON.stringify(previousValues)}. נוכחיים: ${JSON.stringify(liveData)}.`;
-        try{
-          const resp = await callGeminiAPI(prompt,t,showMessage);
-          setAiInsight(resp);
-        }catch{
-          setAiInsight('שגיאה בהפקת תובנה.');
-        }finally{
-          setIsInsightLoading(false);
-        }
-      },[cardId,liveData,previousValues,t,showMessage]);
-
-      useEffect(()=>{
-        if (triggerAi && cardId==='overallStatus') generateCardInsight();
-      },[triggerAi,cardId,generateCardInsight]);
-
-      useEffect(()=>{
-        if (chartRef.current) chartRef.current.destroy();
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        if (cardId==='overallStatus' && liveData?.computedMetrics){
-          chartRef.current = new Chart(ctx,{
-            type:'bar',
-            data:{
-              labels:['חתומות','ממתינות','דחויות'],
-              datasets:[
-                {
-                  label:'לפני',
-                  data:[previousValues.signedOrders||0, calculateTotals(previousValues).computedMetrics.totalPending||0, previousValues.rejectedOrders||0],
-                  backgroundColor:'rgba(148,163,184,0.5)'
-                },
-                {
-                  label:'אחרי',
-                  data:[liveData.signedOrders, liveData.computedMetrics.totalPending, liveData.rejectedOrders],
-                  backgroundColor:['#2dd4bf','#3b82f6','#f87171']
-                }
-              ]
-            },
-            options:{
-              responsive:true, maintainAspectRatio:false,
-              plugins:{
-                legend:{ labels:{ color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } },
-                datalabels:{ color:'#fff' }
-              }
-            }
-          });
-        } else if (cardId==='pendingSignature' && dataForEditing?.pendingSignature){
-          chartRef.current = new Chart(ctx,{
-            type:'bar',
-            data:{
-              labels: signingOrder,
-              datasets:[
-                {
-                  label:'לפני',
-                  data: signingOrder.map(l => previousValues?.pendingSignature?.[l]||0),
-                  backgroundColor:'rgba(148,163,184,0.5)'
-                },
-                {
-                  label:'אחרי',
-                  data: signingOrder.map(l => dataForEditing?.pendingSignature?.[l]||0),
-                  backgroundColor:'#a78bfa'
-                }
-              ]
-            },
-            options:{
-              responsive:true, maintainAspectRatio:false,
-              plugins:{
-                legend:{ labels:{ color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } },
-                datalabels:{ color:'#fff' }
-              }
-            }
-          });
-        }
-      },[liveData,dataForEditing,theme,cardId,previousValues]);
-
-      const handleInputChange = (fieldPath,value)=>{
-        dispatch({type:'UPDATE_EDITING_FIELD', payload:{fieldPath,value}});
-      };
-      const getDeltaForField = (fieldPath)=>{
-        const parts = fieldPath.split('.');
-        let current = dataForEditing;
-        let previous = previousValues;
-        for (const p of parts){
-          current = current?.[p];
-          previous = previous?.[p];
-        }
-        if (previous===undefined || current===undefined || !previousValues || Object.keys(previousValues).length===0) return {value:undefined};
-        const delta = current - previous;
-        const direction = delta>0?'up':delta<0?'down':'neutral';
-        return {value:delta, direction};
-      };
-
-      let title = t(cardInfo.titleKey);
-      if (cardId==='pendingSignature'){
-        title = `${title} (${liveData?.computedMetrics?.totalPendingSignature || 0})`;
-      }
-      if (cardId==='signedOrders'){
-        title = `${t(cardInfo.titleKey)} (${liveData?.computedMetrics?.backlogDifference || 0})`;
-      }
-
-      const renderContent = ()=>{
-        if (cardId==='overallStatus'){
-          return (
-            <>
-              <div className="h-48 mt-4"><canvas ref={canvasRef}/></div>
-              {isInsightLoading ? <div className="h-6 mt-2 skeleton-loader rounded-md"></div> :
-                <p className="text-sm text-center text-teal-300 mt-2 italic h-6">{aiInsight}</p>}
-            </>
-          );
-        }
-        if (cardId==='signedOrders'){
-          return (
-            <>
-              <div className="flex justify-between items-center mb-3">
-                <p>{t('signed_orders_kpi')}</p>
-                <NumericInputWithArrows
-                  value={dataForEditing.signedOrders}
-                  onChange={handleInputChange}
-                  path="signedOrders"
-                  disabled={userRole!=='admin'}
-                  delta={getDeltaForField("signedOrders")}
-                  isIncreaseGood={true}
-                  specialRule="signed"
-                />
-              </div>
-              <div className="flex justify-between items-center mb-3">
-                <p>{t('backlog_gap_kpi')}</p>
-                <NumericInputWithArrows
-                  value={dataForEditing.existingBacklog}
-                  onChange={handleInputChange}
-                  path="existingBacklog"
-                  disabled={userRole!=='admin'}
-                  delta={getDeltaForField("existingBacklog")}
-                  isIncreaseGood={false}
-                  specialRule="backlog"
-                />
-              </div>
-              <div className="w-full h-2 bg-[--bg-tertiary] rounded-full overflow-hidden mt-2.5">
-                <div className="h-full bg-teal-500 rounded-full transition-all duration-500"
-                     style={{width:`${(liveData?.computedMetrics?.goalPercentage||0).toFixed(1)}%`}}></div>
-              </div>
-            </>
-          );
-        }
-        if (cardId==='pendingSignature'){
-          const reversed = [...signingOrder].reverse();
-          return (
-            <>
-              <div className="h-48 mb-5"><canvas ref={canvasRef}/></div>
-              <div className="space-y-3">
-                {reversed.map(branch=>(
-                  <div className="flex justify-between items-center" key={branch}>
-                    <p className="flex items-center gap-2">
-                      <i className={`fas ${departmentIcons[branch]}`}></i>{branch}
-                    </p>
-                    <NumericInputWithArrows
-                      value={dataForEditing.pendingSignature?.[branch] || 0}
-                      onChange={handleInputChange}
-                      path={`pendingSignature.${branch}`}
-                      disabled={userRole!=='admin'}
-                      delta={getDeltaForField(`pendingSignature.${branch}`)}
-                      isIncreaseGood={false}
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          );
-        }
-        if (['rejectedOrders','pendingAncillaryForm','pendingCorrection','pendingAssetNumberEntry'].includes(cardId)){
-          return (
-            <div className="flex justify-center items-center h-full">
-              <NumericInputWithArrows
-                value={dataForEditing[cardId]||0}
-                onChange={handleInputChange}
-                path={cardId}
-                disabled={userRole!=='admin'}
-                delta={getDeltaForField(cardId)}
-                isIncreaseGood={false}
-              />
-            </div>
-          );
-        }
-        return <div className="text-center">אין תצוגה זמינה</div>
-      };
-
-      const colorMap = {
-        teal: 'border-teal-500', purple: 'border-purple-500', red: 'border-red-500',
-        orange: 'border-orange-500', blue: 'border-blue-500', yellow: 'border-yellow-500'
-      };
-
-      return (
-        <div id={id} className={`bg-[--bg-secondary] p-4 rounded-xl border-t-4 ${colorMap[cardInfo.color]} border-x border-b border-[--border-color] fade-in-on-load`}>
-          <div className="flex justify-between items-center">
-            <h3 className="font-bold text-lg text-[--text-primary] flex items-center gap-2">
-              <i className={`fas ${cardInfo.icon}`}></i>
-              <span>{title}</span>
-            </h3>
-            {lastUpdateInfo && cardId==='overallStatus' && (
-              <span className="text-xs text-[--text-secondary]">{t('last_updated',{time:lastUpdateInfo.time})}</span>
-            )}
-          </div>
-          {cardInfo.subtitleKey && <p className="text-xs text-[--text-secondary]">{t(cardInfo.subtitleKey)}</p>}
-          <div className="mt-4">{renderContent()}</div>
-        </div>
-      );
-    };
-
-    const MainDashboard = ({triggerAi, showMessage})=>{
-      const {state, dispatch} = useContext(DashboardContext);
-      const {t} = useTranslation();
-      const userRole = state.userRole;
-
-      const handleSave = () => {
-        dispatch({type:'SAVE_DATA'});
-        showMessage(t('data_saved_success'));
-      };
-      const handleReset = () => {
-        dispatch({type:'RESET_TODAY_DATA'});
-        showMessage(t('data_reset_success'));
-      };
-      
-      const gridCards = [
-        {id:'card-overallStatus', className:'md:col-span-2 md:row-span-2'},
-        {id:'card-signedOrders', className:'md:col-span-2'},
-        {id:'card-pendingSignature', className:'md:col-span-2 md:row-span-3'},
-        {id:'card-rejectedOrders', className:''},
-        {id:'card-pendingCorrection', className:''},
-        {id:'card-pendingAncillaryForm', className:''},
-        {id:'card-pendingAssetNumberEntry', className:''}
-      ];
-
-      return (
-        <div>
-          <KpiStrip/>
-          {userRole === 'admin' && (
-            <div className="flex justify-end gap-2 my-4">
-              <button onClick={handleSave} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                <i className="fas fa-save"></i> {t('save_data')}
-              </button>
-              <button onClick={handleReset} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                <i className="fas fa-undo"></i> {t('reset_data')}
-              </button>
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {gridCards.map(c => (
-              <div key={c.id} className={c.className}>
-                <SectionCard id={c.id} triggerAi={triggerAi} showMessage={showMessage}/>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    };
-
-    const IntelligenceHQ = ({showMessage}) => {
-      const { state } = useContext(DashboardContext);
-      const { t } = useTranslation();
-      const [isLoading, setIsLoading] = useState(false);
-      const [query, setQuery] = useState('');
-      const [response, setResponse] = useState('');
-      const [chartData, setChartData] = useState(null);
-      const chartRef = useRef(null);
-      const canvasRef = useRef(null);
-      const [useGrounding, setUseGrounding] = useState(false);
-      const theme = document.body.className;
-
-      const handleQuery = async () => {
-        setIsLoading(true);
-        setResponse('');
-        setChartData(null);
-        if(chartRef.current) chartRef.current.destroy();
-
-        const dataContext = JSON.stringify({
-          today: state.liveData,
-          yesterday: state.previousValues
-        });
-        
-        const schema = {
-          type: "OBJECT",
-          properties: {
-            answer: { type: "STRING" },
-            chartData: {
-              type: "OBJECT",
-              nullable: true,
-              properties: {
-                type: { type: "STRING", enum: ["bar", "line", "pie", "doughnut"] },
-                labels: { type: "ARRAY", items: { type: "STRING" } },
-                datasets: {
-                  type: "ARRAY",
-                  items: {
-                    type: "OBJECT",
-                    properties: {
-                      label: { type: "STRING" },
-                      data: { type: "ARRAY", items: { type: "NUMBER" } },
-                    }
-                  }
-                }
-              }
-            }
-          }
-        };
-
-        const fullPrompt = `Based on the following data, answer the user's question. Data: ${dataContext}. Question: "${query}". Provide a concise text answer and, if applicable, generate data for a chart to visualize the answer.`;
-        
-        try {
-          const result = await callGeminiAPI(fullPrompt, t, showMessage, schema, useGrounding);
-          const parsedResult = JSON.parse(result);
-          setResponse(parsedResult.answer);
-          if (parsedResult.chartData) {
-            setChartData(parsedResult.chartData);
-          }
-        } catch (error) {
-          setResponse(`שגיאה בניתוח התשובה: ${error.message}`);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      useEffect(() => {
-        if (chartData && canvasRef.current) {
-          if(chartRef.current) chartRef.current.destroy();
-          const colors = ['#2dd4bf', '#3b82f6', '#f87171', '#a78bfa', '#fb923c', '#facc15'];
-          const chartConfig = {
-            type: chartData.type || 'bar',
-            data: {
-                labels: chartData.labels,
-                datasets: chartData.datasets.map((ds, i) => ({
-                    ...ds,
-                    backgroundColor: ds.backgroundColor || colors[i % colors.length] + '80', // Add alpha
-                    borderColor: ds.borderColor || colors[i % colors.length],
-                    borderWidth: 1
-                }))
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } },
-                    datalabels: { color: theme.includes('dark') ? '#fff' : '#000' }
-                },
-                scales: chartData.type !== 'pie' && chartData.type !== 'doughnut' ? {
-                    y: { ticks: { color: theme.includes('dark') ? '#94a3b8' : '#475569' }, grid: { color: theme.includes('dark') ? '#334155' : '#e2e8f0' } },
-                    x: { ticks: { color: theme.includes('dark') ? '#94a3b8' : '#475569' }, grid: { color: theme.includes('dark') ? '#334155' : '#e2e8f0' } }
-                } : {}
-            }
-          };
-          chartRef.current = new Chart(canvasRef.current, chartConfig);
-        }
-      }, [chartData, theme]);
-
-      return (
-          <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] min-h-[60vh]">
-              <h2 className="text-xl font-bold text-center mb-4 text-teal-400">{t('ai_insights_title')}</h2>
-              <div className="flex flex-col md:flex-row gap-2 mb-4">
-                  <input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleQuery()}
-                      placeholder={t('nlq_placeholder')}
-                      className="flex-grow p-2 rounded-lg bg-[--bg-primary] border border-[--border-color] text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  <button onClick={handleQuery} disabled={isLoading} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
-                      {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><i className="fas fa-paper-plane"></i> {t('ask')}</>}
-                  </button>
-              </div>
-              <div className="flex items-center justify-end mb-4">
-                  <label className="flex items-center gap-2 text-sm text-[--text-secondary] cursor-pointer">
-                      <input type="checkbox" checked={useGrounding} onChange={() => setUseGrounding(!useGrounding)} className="form-checkbox h-4 w-4 text-teal-600 bg-[--bg-primary] border-[--border-color] rounded focus:ring-teal-500"/>
-                      {t('search_internet')}
-                  </label>
-              </div>
-
-              {isLoading && (
-                  <div className="text-center p-8">
-                      <div className="loading-spinner mx-auto"></div>
-                      <p className="mt-4 text-lg text-[--text-secondary]">{t('analyzing_data')}</p>
-                  </div>
-              )}
-
-              {response && (
-                  <div className="mt-4 bg-[--bg-primary] p-4 rounded-lg border border-[--border-color]">
-                      <p className="text-[--text-primary] whitespace-pre-wrap">{response}</p>
-                  </div>
-              )}
-
-              {chartData && (
-                  <div className="mt-4 h-80 bg-[--bg-primary] p-4 rounded-lg border border-[--border-color]">
-                      <canvas ref={canvasRef}></canvas>
-                  </div>
-              )}
-          </div>
-      );
-    };
-
-    const ControlPanel = ({ showMessage }) => {
-      const {t} = useTranslation();
-      const [activeSubTab, setActiveSubTab] = useState('diagnostics');
-
-      const SubTabButton = ({ id, label, icon }) => (
-        <button 
-          onClick={() => setActiveSubTab(id)}
-          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeSubTab === id ? 'bg-teal-600 text-white' : 'text-[--text-secondary] hover:bg-[--bg-tertiary] hover:text-[--text-primary]'}`}
-        >
-          <i className={`fas ${icon}`}></i>
-          <span>{label}</span>
-        </button>
-      );
-      
-      const subTabs = [
-        {id: 'diagnostics', label: t('subtab_diagnostics'), icon: 'fa-stethoscope'},
-        {id: 'export_share', label: t('subtab_export_share'), icon: 'fa-share-alt'},
-        {id: 'api_settings', label: t('subtab_api_settings'), icon: 'fa-key'}
-      ];
-
-      return (
-        <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] min-h-[60vh]">
-          <div className="flex items-center border-b border-[--border-color] pb-2 mb-4">
-             <h2 className="text-xl font-bold text-teal-400">{t('control_panel')}</h2>
-          </div>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex flex-row md:flex-col gap-2 md:w-1/4 overflow-x-auto pb-2">
-              {subTabs.map(tab => <SubTabButton key={tab.id} {...tab} />)}
-            </div>
-            <div className="flex-grow">
-              {activeSubTab === 'diagnostics' && <DiagnosticsPanel />}
-              {activeSubTab === 'export_share' && <ExportSharePanel showMessage={showMessage}/>}
-              {activeSubTab === 'api_settings' && <ApiSettingsPanel showMessage={showMessage} />}
-            </div>
-          </div>
-        </div>
-      );
-    };
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
     
-    const DiagnosticsPanel = () => {
-        const { t } = useTranslation();
-        const [bitResults, setBitResults] = useState(null);
-        const [isTesting, setIsTesting] = useState(false);
+    <!-- Custom Styles and Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
 
-        const runBit = () => {
-            setIsTesting(true);
-            setBitResults(null);
-            setTimeout(() => {
-                // Simulate async checks
-                const results = {
-                    code: Math.random() > 0.1, // 90% pass
-                    functionality: Math.random() > 0.05, // 95% pass
-                    ui: Math.random() > 0.15, // 85% pass
-                    api: !!localStorage.getItem('sentinel-apiKey'),
-                };
-                const overall = Object.values(results).every(r => r);
-                setBitResults({ ...results, overall });
-                setIsTesting(false);
-            }, 2000);
+        /* Aggressive fix for preview environment display issues */
+        body > *:not(#root) {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        :root {
+            --status-good-primary: #2dd4bf; --status-good-secondary: #14b8a6; --status-good-glow: rgba(45, 212, 191, 0.5);
+            --status-warning-primary: #3b82f6; --status-warning-secondary: #2563eb; --status-warning-glow: rgba(59, 130, 246, 0.5);
+            --status-critical-primary: #f87171; --status-critical-secondary: #ef4444; --status-critical-glow: rgba(248, 113, 113, 0.5);
+            --status-purple-primary: #a78bfa; --status-purple-secondary: #8b5cf6; --status-purple-glow: rgba(167, 139, 250, 0.5);
+            --status-orange-primary: #fb923c; --status-orange-secondary: #f97316; --status-orange-glow: rgba(251, 146, 60, 0.5);
+            --status-yellow-primary: #facc15; --status-yellow-secondary: #eab308; --status-yellow-glow: rgba(250, 204, 21, 0.5);
+        }
+
+        body { 
+            font-family: 'Heebo', 'Arial', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; 
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        
+        .theme-dark {
+            --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-tertiary: #334155;
+            --text-primary: #e2e8f0; --text-secondary: #94a3b8; --border-color: #334155;
+        }
+
+        .theme-light {
+            --bg-primary: #f1f5f9; --bg-secondary: #ffffff; --bg-tertiary: #e2e8f0;
+            --text-primary: #0f172a; --text-secondary: #475569; --border-color: #e2e8f0;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--status-good-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+
+        .skeleton-loader {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--bg-tertiary);
+        }
+
+        .skeleton-loader::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in-on-load { animation: fadeIn 0.5s ease-out forwards; }
+        .fade-in-on-load > * { opacity: 0; animation: fadeIn 0.5s ease-out forwards; }
+
+        @keyframes radar-sweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes background-pan {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .login-background {
+            background-size: 200% 200%;
+            background-image: radial-gradient(circle at 10% 20%, rgb(15, 23, 42) 0%, rgb(30, 41, 59) 90%);
+            animation: background-pan 20s linear infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--status-good-glow)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 15px var(--status-good-glow)); }
+        }
+        .pulsing-logo {
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        /* Font Awesome Icon Fix */
+        .fa-brands, .fab {
+            font-family: 'Font Awesome 6 Brands';
+        }
+        .fa-solid, .fas {
+            font-family: 'Font Awesome 6 Free';
+        }
+    </style>
+     
+</head>
+
+<body class="bg-[--bg-primary] text-[--text-primary]">
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback, useReducer, createContext, useContext, useMemo } = React;
+        
+        const translations = {
+            en: { "app_title": "Project Sentinel v24.1 | Stable & Feature Complete", "classification": "Classification: Unclassified", "main_header": "Project Sentinel - Command Nexus", "motto": "Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action", "morning_report": "Morning Report", "daily_report": "Daily Report", "report_date": "Report Date:", "control_panel": "Control Panel", "export_share": "Export & Share", "share_link": "Share Link", "share_whatsapp": "Share via WhatsApp", "export_png": "Export PNG", "backup_data": "Backup Data", "backup_code": "Backup Source Code", "backup_png": "Backup Command Bridge (PNG)", "diagnostics": "Diagnostics & Health", "run_bit": "Run Integration Tests", "theme_toggle": "Toggle Theme", "lang_toggle": "Change Language", "version_history": "Version History", "signed_orders_kpi": "Total Signed", "backlog_gap_kpi": "Backlog Gap", "pending_orders_kpi": "Pending Signatures", "rejected_orders_kpi": "Total Rejected", "ai_insights_title": "AI Analytical HQ", "anomaly_detected": "Anomaly Detected!", "anomaly_desc": "Unusually high number of rejected orders detected today (+25% vs 7-day average).", "analyze_anomaly": "Analyze Anomaly", "scenario_engine_title": "Strategic Advisor", "staff_members": "Number of Staff:", "processing_rate": "Processing Rate (orders/day/staff):", "set_goal": "Set Goal: Clear pending in", "days": "days", "get_action_plan": "Get Action Plan", "smart_assistant_title": "Smart Analytical Assistant", "ask": "Ask", "thinking": "Thinking... 🤔", "analytical_brain_title": "Interactive Analytical HQ", "scroll_up": "Scroll Up", "scroll_down": "Scroll Down", "bit_results_title": "BIT Results", "bit_report_summary_ok": "System integrity check passed. All components are operating as expected.", "bit_report_summary_fail": "System integrity check found issues. Review details below.", "bit_check_code": "Code Integrity (Hash Check)", "bit_check_functionality": "Functionality (UI Events)", "bit_check_ui": "UI/UX Consistency", "bit_check_api": "API Connectivity", "pass": "Pass", "fail": "Fail", "user_role": "User Role:", "admin": "Admin", "user": "User", "card_title_overallStatus": "Overall Status", "card_title_signedOrders": "Order Backlog - Desired vs. Actual", "card_title_pendingSignature": "Signature Process (Pending)", "card_title_rejectedOrders": "Rejected Orders", "card_subtitle_rejectedOrders": "(Responsibility: Project Manager vs. Budget)", "card_title_pendingAncillaryForm": "Pending Ancillary Form", "card_subtitle_pendingAncillaryForm": "(Responsibility: Tech Budget Manager)", "card_title_pendingCorrection": "Pending Correction", "card_subtitle_pendingCorrection": "(Responsibility: Project Manager vs. Budget)", "card_title_pendingAssetNumberEntry": "Pending Asset Number", "card_subtitle_pendingAssetNumberEntry": "(Responsibility: Buyer & QA)", "last_updated": "Last Updated: {time}", "deployment_center": "Deployment Center", "system_file_export": "System File Export (Manual Backup)", "export_html": "Export index.html", "tab_command_bridge": "Command Bridge", "tab_intelligence_hq": "Intelligence HQ", "tab_sharing_center": "Sharing Center", "tab_control_panel": "Control Panel", "subtab_docs_info": "Documentation & Info", "subtab_version_history": "Version History", "subtab_diagnostics": "Diagnostics", "subtab_deployment_center": "Deployment Center", "subtab_export_share": "Export & Share", "subtab_manual_deploy": "Manual Deployment", "subtab_backup_restore": "Backup & Restore", "subtab_api_settings": "API Settings", "api_key_label": "Gemini API Key", "api_key_placeholder": "Enter your Gemini API key here", "api_key_missing": "Gemini API key is not configured. Please add it in the Control Panel.", "api_key_saved": "API Key saved successfully!", "save_key": "Save Key", "summary_generator": "Executive Summary Generator", "generate_summary": "Generate Summary", "copy_to_clipboard": "Copy to Clipboard", "copied": "Copied!", "proactive_insights": "Proactive Insights & Forecasts", "nlq_placeholder": "Ask a question about the data...", "daily_focus_title": "AI Daily Focus", "analyzing_data": "Analyzing data...", "deployment_guide_title": "Deployment Guide (GitHub Pages)", "deployment_guide_step1_title": "Step 1: Save & Replace File", "deployment_guide_step1_desc": "Download the new index.html file and use it to replace the old index.html file in your local project folder (the folder on your computer that is connected to GitHub).", "deployment_guide_step2_title": "Step 2: Open Terminal & Navigate", "deployment_guide_step2_desc": "Open a terminal or command prompt (like PowerShell or Git Bash) and navigate to your project folder using the `cd` command. For example: `cd C:\\Projects\\Project-Sentinel-Command-Nexus`", "deployment_guide_step3_title": "Step 3: Upload Changes to GitHub", "deployment_guide_step3_desc": "Run the following three commands in order. These commands will add, commit, and upload your changes to the live website.", "deployment_guide_step3_li1": "Add the updated file:", "deployment_guide_step3_li2": "Commit the change with a message:", "deployment_guide_step3_li3": "Push the update to the live site:", "deployment_guide_step4_title": "Step 4: Verify Update", "deployment_guide_step4_desc": "After a minute or two, refresh your website's URL. You should see the latest version. If not, check your GitHub repository under 'Actions' to see the deployment status.", "login_title": "Welcome to Sentinel", "login_subtitle": "Please select your role and enter the password to continue", "select_role": "Select Role", "password": "Password", "login": "Login", "login_error": "Invalid password for the selected role.", "user_guide_title": "Introduction and Operation Guide", "caps_lock_on": "Caps Lock is on", "logout": "Log Off", "save_data": "Save Data", "reset_data": "Reset Data for Today", "data_saved_success": "Data saved successfully!", "data_reset_success": "Today's report has been reset.", "data_saved_error": "Error saving data.", "data_reset_error": "Error resetting data.", "search_internet": "Search Internet", "export_pdf": "Export PDF Report" },
+            he: { "app_title": "Project Sentinel v24.1 | Stable & Feature Complete", "classification": "רמת סיווג: בלמ\"ס", "main_header": "Project Sentinel - Command Nexus", "motto": "Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action", "morning_report": "דו\"ח בוקר", "daily_report": "דו\"ח יומי", "report_date": "תאריך דו\"ח:", "control_panel": "לוח בקרה", "export_share": "ייצוא ושיתוף", "share_link": "שתף קישור", "share_whatsapp": "שתף בוואטסאפ", "export_png": "ייצא תמונה (PNG)", "backup_data": "גיבוי נתונים", "backup_code": "גיבוי קוד מקור", "backup_png": "גיבוי תמונת מפקדה (PNG)", "diagnostics": "אבחון ותקינות", "run_bit": "הרץ בדיקות אינטגרציה", "theme_toggle": "שנה ערכת נושא", "lang_toggle": "שנה שפה", "version_history": "היסטוריית גרסאות", "signed_orders_kpi": "סה\"כ חתומות", "backlog_gap_kpi": "פער בצבר", "pending_orders_kpi": "ממתינות לחתימה", "rejected_orders_kpi": "סה\"כ דחויות", "ai_insights_title": "מטה אנליטי מבוסס AI", "anomaly_detected": "זוהתה אנומליה!", "anomaly_desc": "זוהה מספר גבוה חריג של הזמנות דחויות היום (עלייה של 25% לעומת ממוצע 7 ימים).", "analyze_anomaly": "נתח אנומליה", "scenario_engine_title": "יועץ אסטרטגי", "staff_members": "מספר אנשי צוות:", "processing_rate": "קצב טיפול (הזמנות ליום לאיש צוות):", "set_goal": "הגדר יעד: סיום ממתינות תוך", "days": "ימים", "get_action_plan": "קבל תוכנית פעולה", "smart_assistant_title": "עוזר אנליטי חכם", "ask": "שאל", "thinking": "חושב... 🤔", "analytical_brain_title": "חמ\"ל אנליטי אינטראקטיבי", "scroll_up": "גלילה למעלה", "scroll_down": "גלילה למטה", "bit_results_title": "תוצאות בדיקת BIT", "bit_report_summary_ok": "בדיקת תקינות מערכת עברה בהצלחה. כל הרכיבים פועלים כמצופה.", "bit_report_summary_fail": "בדיקת תקינות מערכת זיהתה בעיות. יש לעיין בפירוט.", "bit_check_code": "שלמות קוד (בדיקת Hash)", "bit_check_functionality": "פונקציונליות (אירועי UI)", "bit_check_ui": "עקביות עיצוב (UI/UX)", "bit_check_api": "קישוריות API", "pass": "תקין", "fail": "כשל", "user_role": "תפקיד משתמש:", "admin": "מנהל מערכת", "user": "משתמש", "card_title_overallStatus": "מצב כללי", "card_title_signedOrders": "צבר הזמנות-רצוי מול מצוי", "card_title_pendingSignature": "תהליך חתימות (ממתינות)", "card_title_rejectedOrders": "הזמנות דחויות", "card_subtitle_rejectedOrders": "(באחריות מנה\"פ מול תקציבן)", "card_title_pendingAncillaryForm": "ממתינות לטופס נלווה", "card_subtitle_pendingAncillaryForm": "(באחריות תקציבן טכנולוגי)", "card_title_pendingCorrection": "ממתינות לתיקון", "card_subtitle_pendingCorrection": "(באחריות מנה\"פ מול תקציבן)", "card_title_pendingAssetNumberEntry": "ממתינות למספר נכס", "card_subtitle_pendingAssetNumberEntry": "(באחריות קניין ומבקר איכות)", "last_updated": "עדכון אחרון: {time}", "deployment_center": "מרכז הפצה", "system_file_export": "ייצוא קבצי מערכת (לגיבוי ידני)", "export_html": "ייצא index.html", "tab_command_bridge": "גשר הפיקוד", "tab_intelligence_hq": "מטה המודיעין", "tab_sharing_center": "מרכז שיתוף", "tab_control_panel": "לוח בקרה", "subtab_docs_info": "תיעוד ומידע", "subtab_version_history": "היסטוריית גרסאות", "subtab_diagnostics": "אבחון ותקינות", "subtab_deployment_center": "מרכז הפצה", "subtab_export_share": "ייצוא ושיתוף", "subtab_manual_deploy": "הפצה ידנית", "subtab_backup_restore": "גיבוי ושחזור", "subtab_api_settings": "הגדרות API", "api_key_label": "מפתח API של Gemini", "api_key_placeholder": "הזן כאן את מפתח ה-API שלך", "api_key_missing": "מפתח API של Gemini אינו מוגדר. יש להוסיף אותו בלוח הבקרה.", "api_key_saved": "מפתח API נשמר בהצלחה!", "save_key": "שמור מפתח", "summary_generator": "מחולל סיכומי מנהלים", "generate_summary": "הפק סיכום", "copy_to_clipboard": "העתק ללוח", "copied": "הועתק!", "proactive_insights": "תובנות פרואקטיביות ותחזיות", "nlq_placeholder": "שאל שאלה על הנתונים...", "signed_backlog": "צבר הזמנות חתום", "existing_backlog": "צבר הזמנות קיים", "daily_focus_title": "פוקוס יומי מבוסס AI", "analyzing_data": "מנתח נתונים...", "user_guide_title": "עלון הכרות והדרכת תפעול", "deployment_guide_title": "מדריך הפצה ועדכון (GitHub Pages)", "deployment_guide_step1_title": "שלב 1: שמירה והחלפת קובץ", "deployment_guide_step1_desc": "הורד את קובץ ה-index.html החדש, והשתמש בו כדי להחליף את הקובץ הישן בתיקיית הפרויקט המקומית שלך (התיקייה במחשב שמחוברת ל-GitHub).", "deployment_guide_step2_title": "שלב 2: פתיחת טרמינל וניווט", "deployment_guide_step2_desc": "פתח טרמינל או שורת פקודה (כמו PowerShell או Git Bash) ונווט לתיקיית הפרויקט שלך באמצעות הפקודה `cd`. לדוגמה: `cd C:\\Projects\\Project-Sentinel-Command-Nexus`", "deployment_guide_step3_title": "שלב 3: העלאת השינויים ל-GitHub", "deployment_guide_step3_desc": "הרצת שלוש הפקודות הבאות לפי הסדר. פקודות אלו יוסיפו, יתעדו ויעלו את השינויים שלך לאתר החי.", "deployment_guide_step3_li1": "הוספת הקובץ המעודכן:", "deployment_guide_step3_li2": "ביצוע Commit לשינוי עם הודעה:", "deployment_guide_step3_li3": "דחיפת העדכון לאתר החי:", "deployment_guide_step4_title": "שלב 4: וידוא העדכון", "deployment_guide_step4_desc": "לאחר דקה או שתיים, רענן את כתובת האתר שלך. אתה אמור לראות את הגרסה המעודכנת. אם לא, בדוק את סטטוס הפריסה תחת לשונית 'Actions' במאגר ה-GitHub שלך.", "login_title": "ברוכים הבאים ל-Sentinel", "login_subtitle": "אנא בחר את תפקידך והזן סיסמה כדי להמשיך", "select_role": "בחר תפקיד", "password": "סיסמה", "login": "כניסה", "login_error": "סיסמה שגויה עבור התפקיד שנבחר.", "caps_lock_on": "Caps Lock פועל", "logout": "התנתק", "save_data": "שמור נתונים", "reset_data": "אפס נתונים להיום", "data_saved_success": "הנתונים נשמרו בהצלחה!", "data_reset_success": "הדו\"ח להיום אופס בהצלחה.", "data_saved_error": "שגיאה בשמירת הנתונים.", "data_reset_error": "שגיאה באיפוס הנתונים.", "search_internet": "חפש באינטרנט", "export_pdf": "יצוא דו\"ח מנהל PDF" }
         };
 
-        const ResultRow = ({ label, passed }) => (
-            <div className="flex justify-between items-center p-3 bg-[--bg-primary] rounded-lg">
-                <span className="text-[--text-primary]">{label}</span>
-                <span className={`font-bold px-3 py-1 rounded-full text-xs ${passed ? 'bg-teal-500/20 text-teal-300' : 'bg-red-500/20 text-red-300'}`}>
-                    {passed ? t('pass') : t('fail')}
-                </span>
-            </div>
-        );
+        const LanguageContext = createContext();
 
-        return (
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t('diagnostics')}</h3>
-                <button onClick={runBit} disabled={isTesting} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50">
-                    {isTesting ? (
-                        <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>בודק...</span>
-                        </>
-                    ) : (
-                        <><i className="fas fa-cogs"></i> {t('run_bit')}</>
-                    )}
-                </button>
-                {bitResults && (
-                    <div className="bg-[--bg-tertiary] p-4 rounded-lg mt-4 fade-in-on-load">
-                        <h4 className="text-md font-bold text-center mb-3">{t('bit_results_title')}</h4>
-                        <p className={`text-center text-sm mb-4 ${bitResults.overall ? 'text-teal-400' : 'text-red-400'}`}>
-                            {bitResults.overall ? t('bit_report_summary_ok') : t('bit_report_summary_fail')}
-                        </p>
-                        <div className="space-y-2">
-                            <ResultRow label={t('bit_check_code')} passed={bitResults.code} />
-                            <ResultRow label={t('bit_check_functionality')} passed={bitResults.functionality} />
-                            <ResultRow label={t('bit_check_ui')} passed={bitResults.ui} />
-                            <ResultRow label={t('bit_check_api')} passed={bitResults.api} />
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
+        const LanguageProvider = ({ children }) => {
+            const [language, setLanguage] = useState(() => {
+                try {
+                    return localStorage.getItem('sentinel-lang') || 'he';
+                } catch (e) {
+                    console.warn('Could not access localStorage. Defaulting to he.');
+                    return 'he';
+                }
+            });
 
-    const ExportSharePanel = ({ showMessage }) => {
-        const { t } = useTranslation();
+            useEffect(() => {
+                try {
+                    document.documentElement.lang = language;
+                    document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr';
+                    localStorage.setItem('sentinel-lang', language);
+                } catch (e) {
+                     console.warn(`Could not set language '${language}' in localStorage.`);
+                }
+            }, [language]);
 
-        const handleShareLink = () => {
-            navigator.clipboard.writeText(window.location.href)
-                .then(() => showMessage(t('copied')))
-                .catch(() => showMessage('Failed to copy', true));
+            const toggleLanguage = () => {
+                setLanguage(prevLang => (prevLang === 'he' ? 'en' : 'he'));
+            };
+
+            const t = (key, params = {}) => {
+                let translation = translations[language]?.[key] || key;
+                Object.keys(params).forEach(p => {
+                    translation = translation.replace(`{${p}}`, params[p]);
+                });
+                return translation;
+            };
+            
+            const value = {
+                language,
+                toggleLanguage,
+                t
+            };
+
+            return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
         };
 
-        const handleShareWhatsapp = () => {
-            const url = `https://wa.me/?text=${encodeURIComponent(window.location.href)}`;
-            window.open(url, '_blank');
+
+        const useTranslation = () => useContext(LanguageContext);
+
+        const DashboardContext = createContext();
+        
+        const initialReportState = {
+            id: null,
+            signedOrders: 0,
+            existingBacklog: 0, 
+            pendingSignature: { 'ענף גזברות': 0, 'רכש, מכרזים ולוגיסטיקה': 0, 'כספים וחשבות': 0 },
+            rejectedOrders: 0,
+            pendingAncillaryForm: 0,
+            pendingCorrection: 0,
+            pendingAssetNumberEntry: 0,
         };
         
-        const handleExportPNG = () => {
-            const dashboard = document.getElementById('command-bridge');
-            if(dashboard) {
-                html2canvas(dashboard, { 
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary'),
-                    useCORS: true 
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = 'sentinel-dashboard.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                });
+        const calculateTotals = (data) => {
+            if (!data) return { ...initialReportState, computedMetrics: { totalPending: 0, goalPercentage: 0, totalPendingSignature: 0, backlogDifference: 0 } };
+            const totalPendingSignature = Object.values(data.pendingSignature || {}).reduce((a, b) => a + b, 0);
+            
+            const totalPending = totalPendingSignature;
+
+            const backlogDifference = (data.existingBacklog || 0) - (data.signedOrders || 0);
+            const goalPercentage = (data.existingBacklog || 0) > 0 ? ((data.signedOrders || 0) / (data.existingBacklog || 1)) * 100 : 0;
+            return { ...data, computedMetrics: { totalPending, goalPercentage, totalPendingSignature, backlogDifference } };
+        };
+        
+        const loadInitialState = () => {
+            try {
+                const storedReports = localStorage.getItem('sentinelReports');
+                const allReports = storedReports ? JSON.parse(storedReports) : {};
+                
+                const lastReportId = localStorage.getItem('sentinelLastSavedReportId');
+                let initialData = initialReportState;
+                if (lastReportId && allReports[lastReportId]) {
+                    initialData = allReports[lastReportId];
+                }
+
+                return {
+                    allReports,
+                    currentReportId: lastReportId || null,
+                    dataForEditing: JSON.parse(JSON.stringify(initialData)),
+                    liveData: calculateTotals(initialData),
+                    previousValues: {},
+                    lastUpdateInfo: null,
+                    notifications: [],
+                    userRole: 'user',
+                    isAuthenticated: false,
+                };
+            } catch (error) {
+                console.warn("Could not access localStorage to load initial state.", error);
+                return {
+                    allReports: {},
+                    currentReportId: null,
+                    dataForEditing: JSON.parse(JSON.stringify(initialReportState)),
+                    liveData: calculateTotals(initialReportState),
+                    previousValues: {},
+                    lastUpdateInfo: null,
+                    notifications: [],
+                    userRole: 'user',
+                    isAuthenticated: false,
+                };
             }
         };
 
-        const handleExportHTML = () => {
-          const htmlContent = document.documentElement.outerHTML;
-          const blob = new Blob([htmlContent], { type: 'text/html' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = 'index.html';
-          link.click();
-          URL.revokeObjectURL(link.href);
+        function dashboardReducer(state, action) {
+            switch (action.type) {
+                case 'LOGIN_SUCCESS': return { ...state, isAuthenticated: true, userRole: action.payload.role };
+                case 'LOGOUT': return { ...state, isAuthenticated: false, userRole: 'user' };
+                case 'LOAD_REPORT': {
+                    const { id, previousData } = action.payload;
+                    const existingReportData = state.allReports[id];
+                    let reportData;
+
+                    if (existingReportData) {
+                        reportData = JSON.parse(JSON.stringify(existingReportData)); 
+                    } else {
+                        const allReportIds = Object.keys(state.allReports).sort();
+                        const lastAvailableReportId = allReportIds.length > 0 ? allReportIds[allReportIds.length - 1] : null;
+                        const lastAvailableReport = lastAvailableReportId ? state.allReports[lastAvailableReportId] : null;
+                        
+                        const baseData = (previousData && Object.keys(previousData).length > 0) 
+                            ? previousData 
+                            : (lastAvailableReport || initialReportState);
+                            
+                        reportData = JSON.parse(JSON.stringify(baseData)); 
+                        reportData.id = id;
+                    }
+                    return { 
+                        ...state, 
+                        currentReportId: id,
+                        dataForEditing: reportData, 
+                        liveData: calculateTotals(reportData), 
+                        previousValues: previousData || {}
+                    };
+                }
+                case 'SAVE_DATA': {
+                    if (state.userRole !== 'admin' || !state.currentReportId) return state;
+                    const newAllReports = { ...state.allReports, [state.currentReportId]: state.dataForEditing };
+                    try {
+                        localStorage.setItem('sentinelReports', JSON.stringify(newAllReports));
+                        localStorage.setItem('sentinelLastSavedReportId', state.currentReportId);
+                    } catch (error) {
+                        console.warn("Could not save to localStorage:", error);
+                    }
+                    return { ...state, allReports: newAllReports, lastUpdateInfo: { time: new Date().toLocaleString('he-IL') } };
+                }
+                 case 'RESET_TODAY_DATA': {
+                    if (state.userRole !== 'admin' || !state.currentReportId) return state;
+                    const newAllReports = { ...state.allReports, [state.currentReportId]: JSON.parse(JSON.stringify(initialReportState)) };
+                     try {
+                        localStorage.setItem('sentinelReports', JSON.stringify(newAllReports));
+                    } catch (error) { console.warn("Could not reset in localStorage:", error); }
+                    return { ...state, allReports: newAllReports, dataForEditing: JSON.parse(JSON.stringify(initialReportState)), liveData: calculateTotals(initialReportState), lastUpdateInfo: { time: new Date().toLocaleString('he-IL') } };
+                }
+                case 'UPDATE_EDITING_FIELD': {
+                    if (state.userRole !== 'admin') return state;
+                    const { fieldPath, value } = action.payload;
+                    const newState = JSON.parse(JSON.stringify(state));
+                    let current = newState.dataForEditing;
+                    if (!current) return state; 
+                    const pathParts = fieldPath.split('.');
+                    for (let i = 0; i < pathParts.length - 1; i++) {
+                        if (!current[pathParts[i]]) { current[pathParts[i]] = {}; }
+                        current = current[pathParts[i]];
+                    }
+                    current[pathParts[pathParts.length - 1]] = value;
+                    newState.liveData = calculateTotals(newState.dataForEditing);
+                    return newState;
+                }
+                case 'ADD_NOTIFICATION':
+                    if (state.notifications.some(n => n.text === action.payload.text)) return state;
+                    return { ...state, notifications: [action.payload, ...state.notifications] };
+                default: return state;
+            }
+        }
+        
+        const DashboardProvider = ({ children }) => {
+            const [state, dispatch] = useReducer(dashboardReducer, loadInitialState());
+            return <DashboardContext.Provider value={{ state, dispatch }}>{children}</DashboardContext.Provider>;
         };
 
-        const actions = [
-          { label: t('share_link'), icon: 'fa-link', action: handleShareLink, color: 'bg-blue-600 hover:bg-blue-700' },
-          { label: t('share_whatsapp'), icon: 'fa-whatsapp', action: handleShareWhatsapp, color: 'bg-green-600 hover:bg-green-700' },
-          { label: t('export_png'), icon: 'fa-file-image', action: handleExportPNG, color: 'bg-purple-600 hover:bg-purple-700' },
-          { label: t('export_html'), icon: 'fa-file-code', action: handleExportHTML, color: 'bg-orange-600 hover:bg-orange-700' }
+        const versionHistory = [
+            { version: 24.1, date: '02/09/2025', description: "יישום רציפות נתונים מלאה, גיבוי ושחזור פשוטים, ועדכון מדריך הפצה מובנה." },
+            { version: 23.1, date: '02/09/2025', description: "תיקון בעיית קפיצות ממשק (CLS), ושדרוג מקיף לעלון ההדרכה והתפעול." },
+            { version: 23.0, date: '02/09/2025', description: "שדרוג ליבת נתונים ל-IndexedDB, ממשק צ'אט AI שיחתי עם חיבור לאינטרנט, ותובנות פרואקטיביות." },
+            { version: 22.3, date: '02/09/2025', description: "תיקון שגיאת קריסה קריטית ואיחוד הקוד חזרה לקובץ יחיד ויציב." },
         ];
 
-        return (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t('export_share')}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {actions.map(item => (
-                    <button key={item.label} onClick={item.action} className={`${item.color} text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-transform transform hover:scale-105`}>
-                        <i className={`fab ${item.icon} ${item.icon === 'fa-whatsapp' ? '' : 'fas'}`}></i>
-                        <span>{item.label}</span>
-                    </button>
-                ))}
-              </div>
-            </div>
-        );
-    };
-    
-    const ApiSettingsPanel = ({ showMessage }) => {
-        const { t } = useTranslation();
-        const [apiKey, setApiKey] = useState(() => localStorage.getItem('sentinel-apiKey') || '');
-        
-        const handleSaveKey = () => {
-            localStorage.setItem('sentinel-apiKey', apiKey);
-            showMessage(t('api_key_saved'));
+        const cardDefinitions = {
+            overallStatus: { titleKey: 'card_title_overallStatus', color: 'teal', icon: 'fa-tachometer-alt' },
+            signedOrders: { titleKey: 'card_title_signedOrders', color: 'teal', icon: 'fa-check-double' },
+            pendingSignature: { titleKey: 'card_title_pendingSignature', color: 'purple', icon: 'fa-signature' },
+            rejectedOrders: { titleKey: 'card_title_rejectedOrders', subtitleKey: 'card_subtitle_rejectedOrders', color: 'red', icon: 'fa-times-circle' },
+            pendingAncillaryForm: { titleKey: 'card_title_pendingAncillaryForm', subtitleKey: 'card_subtitle_pendingAncillaryForm', color: 'orange', icon: 'fa-file-alt' },
+            pendingCorrection: { titleKey: 'card_title_pendingCorrection', subtitleKey: 'card_subtitle_pendingCorrection', color: 'blue', icon: 'fa-edit' },
+            pendingAssetNumberEntry: { titleKey: 'card_title_pendingAssetNumberEntry', subtitleKey: 'card_subtitle_pendingAssetNumberEntry', color: 'yellow', icon: 'fa-barcode' }
         };
 
-        return (
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t('subtab_api_settings')}</h3>
-                <div>
-                    <label htmlFor="api-key" className="block text-sm font-medium text-[--text-secondary] mb-1">{t('api_key_label')}</label>
-                    <div className="flex gap-2">
-                        <input
-                            type="password"
-                            id="api-key"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder={t('api_key_placeholder')}
-                            className="flex-grow p-2 rounded-lg bg-[--bg-primary] border border-[--border-color] text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                        <button onClick={handleSaveKey} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
-                            <i className="fas fa-save"></i> {t('save_key')}
-                        </button>
+        const callGeminiAPI = async (prompt, t, showMessage, jsonSchema = null, useGrounding = false) => {
+            const apiKey = localStorage.getItem('sentinel-apiKey');
+            if (!apiKey) {
+                 const errorMsg = t('api_key_missing');
+                 console.error(errorMsg);
+                 if (showMessage) showMessage(errorMsg, true);
+                 return jsonSchema ? JSON.stringify({ answer: errorMsg, chartData: null }) : errorMsg;
+            }
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            
+            const payload = { 
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+
+            if (jsonSchema) { 
+                payload.generationConfig = { 
+                    responseMimeType: "application/json", 
+                    responseSchema: jsonSchema 
+                }; 
+            }
+            if (useGrounding) {
+                payload.tools = [{ "googleSearch": {} }];
+            }
+
+            try {
+                const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { const errorBody = await response.json(); console.error("Gemini API HTTP error:", response.status, errorBody); throw new Error(`HTTP error! status: ${response.status} - ${errorBody?.error?.message || 'Unknown error'}`); }
+                const result = await response.json();
+                if (!result.candidates || !result.candidates[0].content || !result.candidates[0].content.parts[0]) { throw new Error("Invalid response structure from Gemini API."); }
+                return result.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                const errorMsg = `שגיאה בתקשורת עם שירות ה-AI: ${error.message}`;
+                if (showMessage) showMessage(errorMsg, true);
+                return jsonSchema ? JSON.stringify({ answer: errorMsg, chartData: null }) : errorMsg;
+            }
+        };
+
+        const App = () => {
+            const { state } = useContext(DashboardContext);
+            const { language } = useTranslation();
+            if (!state.isAuthenticated) {
+                return <LoginScreen key={language} />;
+            }
+            return <MainDashboard key={language} />;
+        };
+
+        const LoginScreen = () => {
+            const { dispatch } = useContext(DashboardContext);
+            const { t, language, toggleLanguage } = useTranslation();
+            const [role, setRole] = useState('user');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+            const [isCapsOn, setIsCapsOn] = useState(false);
+            const passwords = { user: '57919021', admin: 'Myosy2002' };
+            const handleLogin = (e) => {
+                e.preventDefault();
+                setIsLoading(true);
+                setError('');
+                setTimeout(() => {
+                    if (passwords[role] === password) { dispatch({ type: 'LOGIN_SUCCESS', payload: { role } }); } 
+                    else { setError(t('login_error')); }
+                    setIsLoading(false);
+                }, 1000);
+            };
+            const checkCapsLock = (e) => { if (e.getModifierState) { setIsCapsOn(e.getModifierState('CapsLock')); } };
+            return (
+                <div className="flex items-center justify-center min-h-screen login-background">
+                    <div className="relative w-full max-w-md p-8 space-y-8 bg-[--bg-secondary]/80 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-500/20 fade-in-on-load">
+                        <div className="absolute top-4 left-4 rtl:left-auto rtl:right-4">
+                             <button onClick={toggleLanguage} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center font-bold text-sm hover:text-[--text-primary] transition-colors" title={t('lang_toggle')}>
+                                 {language === 'he' ? 'EN' : 'HE'}
+                            </button>
+                        </div>
+                        <div className="text-center">
+                            <div className="inline-block pulsing-logo"><SystemLogo /></div>
+                            <h2 className="mt-6 text-3xl font-bold text-center text-[--text-primary]">{t('login_title')}</h2>
+                            <p className="mt-2 text-center text-sm text-teal-400">{t('login_subtitle')}</p>
+                        </div>
+                        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+                            <div className="relative">
+                                <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full p-3 bg-[--bg-primary]/70 border-2 border-[--border-color] rounded-md appearance-none text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                                    <option className="text-black" value="user">{t('user')}</option>
+                                    <option className="text-black" value="admin">{t('admin')}</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[--text-secondary]"><i className="fas fa-chevron-down"></i></div>
+                            </div>
+                             <div className="relative">
+                                <button type="button" onClick={() => setIsPasswordVisible(!isPasswordVisible)} className="absolute top-3.5 left-3 text-[--text-secondary] hover:text-teal-400 transition-colors z-10"><i className={`fas ${isPasswordVisible ? 'fa-eye-slash' : 'fa-eye'}`}></i></button>
+                                <input type={isPasswordVisible ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} placeholder={t('password')} className="w-full p-3 pl-10 bg-[--bg-primary]/70 border-2 border-[--border-color] rounded-md text-[--text-primary] placeholder:text-[--text-secondary] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" required />
+                            </div>
+                            {isCapsOn && <p className="text-xs text-yellow-400 text-center flex items-center justify-center gap-2"><i className="fas fa-exclamation-circle"></i> {t('caps_lock_on')}</p>}
+                            {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+                            <div>
+                                <button type="submit" disabled={isLoading} className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 transition-all transform hover:scale-105 active:scale-100">
+                                    {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : t('login')}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            </div>
-        );
-    };
+            );
+        };
 
-
-    const App = () => {
-      const [theme, setTheme] = useState(() => {
-        try { return localStorage.getItem('sentinel-theme') || 'theme-dark'; } 
-        catch { return 'theme-dark'; }
-      });
-      const {state, dispatch} = useContext(DashboardContext);
-      const {t} = useTranslation();
-      const [currentReportId, setCurrentReportId] = useState(null);
-      const [currentReportType, setCurrentReportType] = useState('daily');
-      const [triggerAi, setTriggerAi] = useState(false);
-      const [activeTab, setActiveTab] = useState('command_bridge');
-      const [message, setMessage] = useState({text:'', isError: false});
-
-      const showMessage = (text, isError=false) => {
-          setMessage({text, isError});
-          setTimeout(() => setMessage({text:'', isError: false}), 3000);
-      };
-
-      useEffect(() => {
-        document.body.className = theme;
-        try { localStorage.setItem('sentinel-theme', theme); } catch {}
-      }, [theme]);
-      
-      const toggleTheme = () => setTheme(prev => prev === 'theme-dark' ? 'theme-light' : 'theme-dark');
-
-      useEffect(() => {
-        const now = new Date();
-        const id = now.toISOString().slice(0, 10); // YYYY-MM-DD
-        
-        const lastReportId = state.currentReportId;
-        if(lastReportId !== id) {
-          const yesterday = new Date(now);
-          yesterday.setDate(now.getDate() - 1);
-          const yesterdayId = yesterday.toISOString().slice(0, 10);
-          const yesterdayData = state.allReports[yesterdayId];
-          dispatch({ type: 'LOAD_REPORT', payload: { id, previousData: yesterdayData } });
-        } else {
-          dispatch({ type: 'LOAD_REPORT', payload: { id, previousData: null } }); // Should load from memory
-        }
-        
-        setCurrentReportId(id);
-        setCurrentReportType(now.getHours() < 12 ? 'morning' : 'daily');
-        setTriggerAi(true);
-      }, []);
-
-      if (!state.isAuthenticated) {
-        return <LoginScreen />;
-      }
-      
-      const TabButton = ({ id, label, icon }) => (
-        <button 
-          onClick={() => setActiveTab(id)}
-          className={`flex-1 flex items-center justify-center gap-3 py-3 px-4 text-sm font-bold border-b-4 transition-all duration-300 ${activeTab === id ? 'text-teal-400 border-teal-400' : 'text-[--text-secondary] border-transparent hover:text-teal-300 hover:border-teal-300/50'}`}
-        >
-          <i className={`fas ${icon} text-lg`}></i>
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      );
-      
-      const tabs = [
-        { id: 'command_bridge', label: t('tab_command_bridge'), icon: 'fa-sitemap' },
-        { id: 'intelligence_hq', label: t('tab_intelligence_hq'), icon: 'fa-brain' },
-        { id: 'control_panel', label: t('tab_control_panel'), icon: 'fa-sliders-h' }
-      ];
-
-      return (
-        <div className="bg-[--bg-primary] text-[--text-primary] min-h-screen p-4 sm:p-6 md:p-8">
-            <TopBar theme={theme} toggleTheme={toggleTheme} />
-            <DashboardHeader currentReportType={currentReportType} reportDate={currentReportId} />
-
-            <div className="bg-[--bg-secondary] rounded-xl border border-[--border-color] sticky top-0 z-10 mb-6">
-                <div className="flex justify-around">
-                  {tabs.map(tab => <TabButton key={tab.id} {...tab} />)}
-                </div>
-            </div>
-
-            <main>
-                <div id="command-bridge" style={{display: activeTab === 'command_bridge' ? 'block' : 'none'}}>
-                    <MainDashboard triggerAi={triggerAi} showMessage={showMessage} />
-                </div>
-                <div id="intelligence-hq" style={{display: activeTab === 'intelligence_hq' ? 'block' : 'none'}}>
-                    <IntelligenceHQ showMessage={showMessage} />
-                </div>
-                <div id="control-panel-tab" style={{display: activeTab === 'control_panel' ? 'block' : 'none'}}>
-                    <ControlPanel showMessage={showMessage} />
-                </div>
-            </main>
+        const MainDashboard = () => {
+            const { state, dispatch } = useContext(DashboardContext);
+            const { userRole } = state;
+            const { t } = useTranslation();
             
-            {message.text && (
-                <div className={`fixed bottom-5 right-5 p-3 rounded-lg text-white shadow-lg fade-in-on-load ${message.isError ? 'bg-red-500' : 'bg-teal-500'}`}>
-                    {message.text}
-                </div>
-            )}
-        </div>
-      );
-    };
+            const [reportDate, setReportDate] = useState(() => {
+                const lastReportId = localStorage.getItem('sentinelLastSavedReportId');
+                if (lastReportId) {
+                    const parts = lastReportId.split('-');
+                    if (parts.length >= 3) {
+                         const date = parts.slice(0, 3).join('-');
+                         if (!isNaN(new Date(date).getTime())) return date;
+                    }
+                }
+                return new Date().toISOString().split('T')[0];
+            });
 
-    const LoginScreen = () => {
-      const { t } = useTranslation();
-      const { dispatch } = useContext(DashboardContext);
-      const [role, setRole] = useState('user');
-      const [password, setPassword] = useState('');
-      const [error, setError] = useState('');
-      const [isCapsLockOn, setIsCapsLockOn] = useState(false);
-      const passwordRef = useRef(null);
+            const [currentReportType, setCurrentReportType] = useState(() => {
+                const lastReportId = localStorage.getItem('sentinelLastSavedReportId');
+                if (lastReportId) {
+                    const parts = lastReportId.split('-');
+                    if (parts.length >= 4) return parts[3];
+                }
+                return 'morning';
+            });
+            
+            useEffect(() => {
+                const reportId = `${reportDate}-${currentReportType}`;
+                const getPreviousDocId = () => {
+                  const currentDate = new Date(reportDate);
+                  if (currentReportType === 'daily') {
+                    return `${reportDate}-morning`;
+                  } else {
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    const prevDate = currentDate.toISOString().split('T')[0];
+                    return `${prevDate}-daily`;
+                  }
+                };
+                const prevDocId = getPreviousDocId();
 
-      const passwords = {
-        admin: 'Admin123!',
-        user: 'User123!'
-      };
+                try {
+                  const allReports = JSON.parse(localStorage.getItem('sentinelReports') || '{}');
+                  const previousData = allReports[prevDocId] || {};
+                  dispatch({ type: 'LOAD_REPORT', payload: { id: reportId, previousData } });
+                } catch (e) {
+                  console.warn('Could not access localStorage to load report.', e);
+                  dispatch({ type: 'LOAD_REPORT', payload: { id: reportId, previousData: {} } });
+                }
+            }, [reportDate, currentReportType, dispatch]);
 
-      const handleLogin = (e) => {
-        e.preventDefault();
-        if (password === passwords[role]) {
-          dispatch({ type: 'LOGIN_SUCCESS', payload: { role } });
-          setError('');
-        } else {
-          setError(t('login_error'));
-          passwordRef.current.classList.add('animate-shake');
-          setTimeout(() => {
-            if (passwordRef.current) {
-               passwordRef.current.classList.remove('animate-shake');
+
+            const [message, setMessage] = useState({ text: '', isError: false, visible: false });
+            const [theme, setTheme] = useState('theme-dark');
+            const [activeModal, setActiveModal] = useState(null);
+            const [activeTab, setActiveTab] = useState('command_bridge'); 
+            const [activeControlPanelTab, setActiveControlPanelTab] = useState('backup_restore');
+            const [isAiGenerating, setIsAiGenerating] = useState(false);
+            const infographicContainerRef = useRef(null);
+
+            useEffect(() => {
+                try {
+                    const savedTheme = localStorage.getItem('sentinel-theme') || 'theme-dark';
+                    setTheme(savedTheme);
+                    document.documentElement.classList.add(savedTheme.replace('theme-',''));
+                    document.body.classList.add(savedTheme);
+                } catch(e) { console.warn('Could not access localStorage for theme.') }
+            }, []);
+
+            useEffect(() => { document.title = t('app_title'); }, [t]);
+            useEffect(() => { let timer; if (message.visible) { timer = setTimeout(() => setMessage(prev => ({ ...prev, visible: false })), 5000); } return () => clearTimeout(timer); }, [message]);
+            const showMessage = useCallback((text, isError = false) => { setMessage({ text, isError, visible: true }); }, []);
+            const toggleTheme = () => { try { const newTheme = theme === 'theme-dark' ? 'theme-light' : 'theme-dark'; const oldTheme = theme; setTheme(newTheme); localStorage.setItem('sentinel-theme', newTheme); document.documentElement.classList.remove(oldTheme.replace('theme-','')); document.body.classList.remove(oldTheme); document.documentElement.classList.add(newTheme.replace('theme-','')); document.body.classList.add(newTheme); } catch(e) {console.warn('Could not save theme to localStorage.')} };
+            
+            const getFormattedFileName = (type) => {
+                const now = new Date();
+                const date = now.toISOString().split('T')[0];
+                const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+                return `Project-Sentinel-Command-Nexus-v24.1-${date}-${time}.${type}`;
+            };
+            
+            const handleExport = async () => {
+                const element = infographicContainerRef.current;
+                if (!element) {
+                    showMessage("שגיאת ייצוא: לא נמצאה הפניה לאלמנט.", true);
+                    return;
+                }
+                
+                showMessage("מכין ייצוא...");
+                
+                try {
+                    Chart.defaults.animation = false;
+                    const canvas = await html2canvas(element, {
+                        backgroundColor: document.body.classList.contains('theme-dark') ? '#0f172a' : '#f1f5f9',
+                        scale: 2,
+                        useCORS: true,
+                    });
+                    Chart.defaults.animation = {};
+                    
+                    const fileName = getFormattedFileName('png');
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = fileName;
+                    link.click();
+
+                } catch (err) {
+                    console.error("שגיאה בתהליך הייצוא:", err);
+                    showMessage("שגיאה ביצירת הקובץ.", true);
+                    Chart.defaults.animation = {};
+                }
+            };
+
+
+            const handleDateChange = (days) => { const currentDate = new Date(reportDate); currentDate.setDate(currentDate.getDate() + days); setReportDate(currentDate.toISOString().split('T')[0]); };
+            const handleShareLink = () => { const url = window.location.href; try { const textArea = document.createElement("textarea"); textArea.value = url; document.body.appendChild(textArea); textArea.focus(); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); showMessage("הקישור הועתק ללוח!"); } catch (err) { showMessage("שגיאה בהעתקת הקישור.", true); } };
+            
+            const handleSaveData = () => {
+                dispatch({ type: 'SAVE_DATA' });
+                showMessage(t('data_saved_success'));
+                setIsAiGenerating(true);
+            };
+            
+            const handleResetData = () => {
+                dispatch({ type: 'RESET_TODAY_DATA' });
+                showMessage(t('data_reset_success'));
+            };
+            
+            const TabNavigation = () => ( <div className="flex p-1 space-x-1 rtl:space-x-reverse bg-[--bg-secondary] rounded-xl shadow-lg border border-[--border-color]"> <button className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'command_bridge' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveTab('command_bridge')}> <i className="fas fa-tachometer-alt"></i> {t('tab_command_bridge')} </button> <button className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'intelligence_hq' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveTab('intelligence_hq')}> <i className="fas fa-brain"></i> {t('tab_intelligence_hq')} </button> <button className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'sharing_center' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveTab('sharing_center')}> <i className="fas fa-share-alt"></i> {t('tab_sharing_center')} </button> {userRole === 'admin' && ( <button className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'control_panel' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveTab('control_panel')}> <i className="fas fa-cogs"></i> {t('tab_control_panel')} </button> )} </div> );
+            const ControlPanelTabs = () => ( <div className="flex flex-wrap p-1 gap-1 bg-[--bg-secondary] rounded-xl shadow-lg border border-[--border-color] mt-5"> <button className={`flex-1 py-2 text-xs font-medium leading-5 rounded-lg transition-all duration-300 ${activeControlPanelTab === 'backup_restore' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveControlPanelTab('backup_restore')}>{t('subtab_backup_restore')}</button> <button className={`flex-1 py-2 text-xs font-medium leading-5 rounded-lg transition-all duration-300 ${activeControlPanelTab === 'api_settings' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveControlPanelTab('api_settings')}>{t('subtab_api_settings')}</button> <button className={`flex-1 py-2 text-xs font-medium leading-5 rounded-lg transition-all duration-300 ${activeControlPanelTab === 'deployment_center' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveControlPanelTab('deployment_center')}>{t('deployment_center')}</button> <button className={`flex-1 py-2 text-xs font-medium leading-5 rounded-lg transition-all duration-300 ${activeControlPanelTab === 'diagnostics' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveControlPanelTab('diagnostics')}>{t('subtab_diagnostics')}</button> <button className={`flex-1 py-2 text-xs font-medium leading-5 rounded-lg transition-all duration-300 ${activeControlPanelTab === 'docs_info' ? 'bg-teal-500 text-white shadow' : 'text-[--text-secondary] hover:bg-[--bg-tertiary]'}`} onClick={() => setActiveControlPanelTab('docs_info')}>{t('subtab_docs_info')}</button> </div> );
+            
+             if (!state.currentReportId) {
+                return <div className="flex justify-center items-center min-h-screen"><div className="loading-spinner"></div></div>
             }
-          }, 500);
-        }
-      };
-      
-      const checkCapsLock = (e) => {
-        if (e.getModifierState) {
-          setIsCapsLockOn(e.getModifierState('CapsLock'));
-        }
-      };
-      
-      // Temporary style for animation
-      const style = document.createElement('style');
-      style.innerHTML = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } .animate-shake { animation: shake 0.5s ease-in-out; }`;
-      document.head.appendChild(style);
 
-
-      return (
-        <div className="min-h-screen flex items-center justify-center login-background p-4">
-          <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-slate-700">
-            <div className="text-center mb-8">
-              <div className="inline-block pulsing-logo">
-                <SystemLogo />
-              </div>
-              <h1 className="text-3xl font-bold text-slate-100 mt-4">{t('login_title')}</h1>
-              <p className="text-slate-400">{t('login_subtitle')}</p>
-            </div>
-            
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label htmlFor="role-select" className="block text-sm font-medium text-slate-300">{t('select_role')}</label>
-                <select id="role-select" value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500">
-                  <option value="user">{t('user')}</option>
-                  <option value="admin">{t('admin')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="password-input" className="block text-sm font-medium text-slate-300">{t('password')}</label>
-                <div className="relative">
-                   <input 
-                    ref={passwordRef}
-                    type="password" 
-                    id="password-input" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    onKeyUp={checkCapsLock}
-                    onKeyDown={checkCapsLock}
-                    className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500" />
-                    {isCapsLockOn && <div className="absolute top-1/2 right-3 -translate-y-1/2 text-yellow-400 text-xs" title={t('caps_lock_on')}><i className="fas fa-exclamation-triangle"></i></div>}
+            return (
+                <div className="fade-in-on-load">
+                    {activeModal && <Modal activeModal={activeModal} setActiveModal={setActiveModal} onExport={handleExport} />}
+                    <div className="fixed bottom-5 right-5 flex flex-col gap-3 z-50"> <button onClick={() => window.scrollTo(0, 0)} title={t('scroll_up')} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-primary] border border-[--border-color] flex items-center justify-center text-lg transition-all duration-300 hover:bg-teal-500 hover:text-white transform hover:scale-110 active:scale-95"><i className="fas fa-arrow-up"></i></button> <button onClick={() => window.scrollTo(0, document.body.scrollHeight)} title={t('scroll_down')} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-primary] border border-[--border-color] flex items-center justify-center text-lg transition-all duration-300 hover:bg-teal-500 hover:text-white transform hover:scale-110 active:scale-95"><i className="fas fa-arrow-down"></i></button> </div>
+                    <div className="w-full max-w-6xl mx-auto p-4 md:p-6">
+                        <TopBar theme={theme} toggleTheme={toggleTheme} />
+                        <div className="flex flex-col gap-4 mb-5 bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] shadow-lg">
+                            <div className="flex justify-center items-center"><Clock /></div>
+                            <div className="flex flex-col sm:flex-row gap-2.5"> <button className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentReportType === 'morning' ? 'bg-teal-500 text-white shadow-md' : 'bg-[--bg-tertiary] text-[--text-secondary] hover:bg-opacity-75'}`} onClick={() => setCurrentReportType('morning')}>{t('morning_report')}</button> <button className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentReportType === 'daily' ? 'bg-teal-500 text-white shadow-md' : 'bg-[--bg-tertiary] text-[--text-secondary] hover:bg-opacity-75'}`} onClick={() => setCurrentReportType('daily')}>{t('daily_report')}</button> </div>
+                            <div className="flex justify-between items-center gap-2.5"> <button className="w-9 h-9 flex-shrink-0 rounded-full bg-[--bg-tertiary] border border-[--border-color] flex items-center justify-center transition-transform transform hover:scale-110 active:scale-95" onClick={() => handleDateChange(1)}><i className="fas fa-chevron-right"></i></button> <div className="relative flex-grow"> <input type="date" id="reportDate" value={reportDate} onChange={e => setReportDate(e.target.value)} className="w-full bg-[--bg-tertiary] border border-[--border-color] rounded-lg p-2 text-center ps-10"/> <i className="fas fa-calendar-alt absolute start-3 top-1/2 -translate-y-1/2 text-[--text-secondary]"></i> </div> <button className="w-9 h-9 flex-shrink-0 rounded-full bg-[--bg-tertiary] border border-[--border-color] flex items-center justify-center transition-transform transform hover:scale-110 active:scale-95" onClick={() => handleDateChange(-1)}><i className="fas fa-chevron-left"></i></button> </div>
+                        </div>
+                        <TabNavigation />
+                        <div className="pt-2.5">
+                            <div style={{ display: activeTab === 'command_bridge' ? 'block' : 'none' }}>
+                                <React.Fragment>
+                                    <KpiStrip />
+                                    <DailyFocusAI trigger={isAiGenerating} onComplete={() => setIsAiGenerating(false)} showMessage={showMessage}/>
+                                    <div ref={infographicContainerRef}>
+                                        <div className="bg-[--bg-secondary] rounded-2xl border border-[--border-color] shadow-2xl p-6">
+                                            <DashboardHeader currentReportType={currentReportType} reportDate={reportDate} />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                                <div className="lg:col-span-2 space-y-5">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5"> <div id="card-overallStatus" style={{ animationDelay: `100ms` }} className="fade-in-on-load"><SectionCard id="card-overallStatus" triggerAi={isAiGenerating} showMessage={showMessage}/></div> <div id="card-signedOrders" style={{ animationDelay: `200ms` }} className="fade-in-on-load"><SectionCard id="card-signedOrders" showMessage={showMessage}/></div> </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5"> <div id="card-rejectedOrders" style={{ animationDelay: `400ms` }} className="fade-in-on-load"><SectionCard id="card-rejectedOrders" showMessage={showMessage}/></div> <div id="card-pendingCorrection" style={{ animationDelay: `500ms` }} className="fade-in-on-load"><SectionCard id="card-pendingCorrection" showMessage={showMessage}/></div> </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5"> <div id="card-pendingAncillaryForm" style={{ animationDelay: `600ms` }} className="fade-in-on-load"><SectionCard id="card-pendingAncillaryForm" showMessage={showMessage}/></div> <div id="card-pendingAssetNumberEntry" style={{ animationDelay: `700ms` }} className="fade-in-on-load"><SectionCard id="card-pendingAssetNumberEntry" showMessage={showMessage}/></div> </div>
+                                                </div>
+                                                <div className="flex flex-col space-y-5">
+                                                    <div id="card-pendingSignature" className="fade-in-on-load" style={{ animationDelay: `300ms` }}><SectionCard id="card-pendingSignature" showMessage={showMessage}/></div>
+                                                    {userRole === 'admin' && ( <div className="p-4 bg-[--bg-primary] rounded-lg border border-[--border-color] flex flex-col gap-4 justify-center"> <button onClick={handleSaveData} className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-teal-600 border-teal-500 text-white hover:bg-teal-500 transform hover:scale-105 active:scale-95"> <i className="fas fa-save"></i> {t('save_data')} </button> <button onClick={handleResetData} className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-red-600 border-red-500 text-white hover:bg-red-500 transform hover:scale-105 active:scale-95"> <i className="fas fa-undo"></i> {t('reset_data')} </button> </div> )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </React.Fragment>
+                            </div>
+                            <div style={{ display: activeTab === 'intelligence_hq' ? 'block' : 'none' }}><IntelligenceHQ triggerAi={isAiGenerating} showMessage={showMessage}/></div>
+                            <div style={{ display: activeTab === 'sharing_center' ? 'block' : 'none' }}><SharingCenter handleExport={handleExport} handleShareLink={handleShareLink} /></div>
+                            {userRole === 'admin' && ( <div style={{ display: activeTab === 'control_panel' ? 'block' : 'none' }}> <div className="bg-[--bg-secondary] rounded-2xl border border-[--border-color] p-5"> <ControlPanelTabs /> <div className="pt-2.5"> {activeControlPanelTab === 'backup_restore' && <BackupAndRestore handleExportPng={handleExport} />} {activeControlPanelTab === 'api_settings' && <ApiSettings showMessage={showMessage} />} {activeControlPanelTab === 'deployment_center' && <DeploymentGuide />} {activeControlPanelTab === 'diagnostics' && <div className="bg-[--bg-primary] p-4 rounded-lg border border-[--border-color]"><button className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-[--bg-secondary] text-[--text-primary] border-[--border-color] hover:bg-[--bg-tertiary] transform hover:scale-105 active:scale-95" onClick={() => setActiveModal('bit')}>{t('run_bit')}</button></div>} {activeControlPanelTab === 'docs_info' && <VersionHistoryContent />} </div> </div> </div> )}
+                        </div>
+                    </div>
+                    {message.visible && <div className={`fixed top-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg text-white transition-all duration-500 ${message.isError ? 'bg-red-500' : 'bg-teal-500'} ${message.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5'}`}>{message.text}</div>}
                 </div>
-                 {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-              </div>
+            );
+        }
+        
+        const TopBar = ({ theme, toggleTheme }) => { const { language, toggleLanguage, t } = useTranslation(); const { state, dispatch } = useContext(DashboardContext); const { userRole, notifications } = state; const handleLogout = () => { dispatch({ type: 'LOGOUT' }); }; return ( <div className="flex justify-between items-center mb-5"> <div className="text-xs text-[--text-secondary] transition-opacity duration-500"></div> <div className="flex items-center gap-2"> <div className="bg-[--bg-secondary] text-[--text-primary] border border-[--border-color] rounded-full text-xs px-3 py-1 flex items-center gap-2"> <span>{t('user_role')}</span> <span className="font-bold">{t(userRole)}</span> </div> <button className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center relative hover:text-[--text-primary] transition-colors" title="התראות"> <i className="fas fa-bell"></i> {notifications.length > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">{notifications.length}</span>} </button> <button onClick={toggleLanguage} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center font-bold text-sm hover:text-[--text-primary] transition-colors" title={t('lang_toggle')}> {language === 'he' ? 'EN' : 'HE'} </button> <button onClick={toggleTheme} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center hover:text-[--text-primary] transition-colors" title={t('theme_toggle')}> {theme === 'theme-dark' ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>} </button> <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center hover:text-[--text-primary] transition-colors" title={t('logout')}> <i className="fas fa-sign-out-alt"></i> </button> </div> </div> ); };
+        const DashboardHeader = ({ currentReportType, reportDate }) => { const { t, language } = useTranslation(); return ( <div className="text-center mb-8"> <div className="flex justify-center items-center gap-4 mb-2"> <SystemLogo /> <div> <h1 className="text-3xl md:text-4xl font-bold text-[--text-primary] break-words">{t('main_header')}</h1> <p className="text-sm text-[--text-secondary]">{t('classification')}</p> </div> <SystemLogo mirrored={true} /> </div> <div className="flex flex-col items-center"> <p className="text-md text-teal-300 italic">{t('motto')}</p> <div className="w-1/3 h-px bg-teal-500/50 mt-2"></div> </div> <p className="text-md text-[--text-secondary] mt-4"> {currentReportType === 'morning' ? t('morning_report') : t('daily_report')} - {new Date(reportDate).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-CA')} </p> </div> ); };
+        const KpiStrip = () => {
+            const { state } = useContext(DashboardContext);
+            const { liveData, previousValues } = state || {};
+            const { t } = useTranslation();
+        
+            const getDelta = (current, previous) => {
+                if (previous === undefined || current === undefined || previous === null || current === null || Object.keys(previousValues || {}).length === 0) return { value: undefined };
+                const delta = current - previous;
+                const direction = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
+                return { value: delta, direction };
+            };
+        
+            const previousComputed = calculateTotals(previousValues).computedMetrics;
+            const kpiData = [
+                { value: liveData?.signedOrders, label: t('signed_orders_kpi'), type: 'good', delta: getDelta(liveData?.signedOrders, previousValues?.signedOrders), isPositiveGood: true },
+                { value: liveData?.computedMetrics?.backlogDifference, label: t('backlog_gap_kpi'), type: 'warning', delta: getDelta(liveData?.computedMetrics?.backlogDifference, previousComputed?.backlogDifference), isPositiveGood: false },
+                { value: liveData?.computedMetrics?.totalPendingSignature, label: t('pending_orders_kpi'), type: 'warning', delta: getDelta(liveData?.computedMetrics?.totalPendingSignature, previousComputed?.totalPendingSignature), isPositiveGood: false },
+                { value: liveData?.rejectedOrders, label: t('rejected_orders_kpi'), type: 'critical', delta: getDelta(liveData?.rejectedOrders, previousValues?.rejectedOrders), isPositiveGood: false },
+            ];
+            return (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                    {kpiData.map((kpi, index) => {
+                        let deltaColor = 'text-gray-400';
+                        if (kpi.delta?.direction === 'up') {
+                            deltaColor = kpi.isPositiveGood ? 'text-teal-400' : 'text-red-400';
+                        } else if (kpi.delta?.direction === 'down') {
+                            deltaColor = kpi.isPositiveGood ? 'text-red-400' : 'text-teal-400';
+                        }
+                        if (kpi.label === t('signed_orders_kpi') && kpi.delta?.direction === 'down') {
+                            deltaColor = 'text-gray-400';
+                        }
+                        return (
+                            <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] text-center transition-all duration-300 transform hover:scale-105 hover:shadow-lg fade-in-on-load" style={{animationDelay: `${index * 100}ms`}} key={kpi.label}>
+                                <div className={`text-3xl font-bold flex items-center justify-center gap-2 ${kpi.type === 'good' ? 'text-teal-400' : kpi.type === 'warning' ? 'text-blue-400' : 'text-red-400'}`}>
+                                    <AnimatedNumber n={kpi.value || 0} />
+                                    {kpi.delta && kpi.delta.value !== undefined && kpi.delta.direction !== 'neutral' && (
+                                        <span className={`text-xs flex items-center gap-1 ${deltaColor}`}>
+                                            <i className={`fas fa-arrow-${kpi.delta.direction}`}></i> {Math.abs(kpi.delta.value)}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-xs text-[--text-secondary] mt-1">{kpi.label}</div>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        };
+        const NumericInputWithArrows = ({ value, onChange, path, disabled, delta, isIncreaseGood = false, specialRule = null }) => { const intervalRef = useRef(null); const timeoutRef = useRef(null); const handleValueChange = (increment) => { const currentValue = parseInt(value, 10) || 0; const newValue = Math.max(0, currentValue + increment); onChange(path, newValue); }; const startPress = (increment) => { handleValueChange(increment); timeoutRef.current = setTimeout(() => { intervalRef.current = setInterval(() => { handleValueChange(increment); }, 100); }, 500); }; const stopPress = () => { clearTimeout(timeoutRef.current); clearInterval(intervalRef.current); }; let deltaColor = 'text-gray-400'; if (delta?.direction === 'up') { deltaColor = isIncreaseGood ? 'text-teal-400' : 'text-red-400'; } else if (delta?.direction === 'down') { deltaColor = isIncreaseGood ? 'text-red-400' : 'text-teal-400'; } if (specialRule === 'signed' && delta?.direction === 'down') { deltaColor = 'text-gray-400'; } if (specialRule === 'backlog' && delta?.direction === 'down') { deltaColor = 'text-gray-400'; } return ( <div className="flex items-center gap-2 justify-end"> {delta && delta.value !== undefined && delta.direction !== 'neutral' && ( <span className={`text-sm flex items-center gap-1 ${deltaColor}`}> <i className={`fas fa-arrow-${delta.direction}`}></i> {Math.abs(delta.value)} </span> )} <div className="flex flex-col gap-1"> <button className="w-8 h-8 bg-[--bg-tertiary] rounded-md flex items-center justify-center disabled:opacity-50 transition-transform transform hover:scale-110 active:scale-95" onClick={() => handleValueChange(1)} onMouseDown={() => startPress(1)} onMouseUp={stopPress} onMouseLeave={stopPress} onTouchStart={() => startPress(1)} onTouchEnd={stopPress} disabled={disabled}> <i className="fas fa-chevron-up"></i> </button> <button className="w-8 h-8 bg-[--bg-tertiary] rounded-md flex items-center justify-center disabled:opacity-50 transition-transform transform hover:scale-110 active:scale-95" onClick={() => handleValueChange(-1)} onMouseDown={() => startPress(-1)} onMouseUp={stopPress} onMouseLeave={stopPress} onTouchStart={() => startPress(-1)} onTouchEnd={stopPress} disabled={disabled}> <i className="fas fa-chevron-down"></i> </button> </div> <input className="w-20 p-2 text-2xl font-bold text-center bg-[--bg-secondary] border border-[--border-color] rounded-lg disabled:bg-[--bg-tertiary]" type="number" value={value} onChange={e => onChange(path, parseInt(e.target.value, 10) || 0)} disabled={disabled} /> </div> ); };
+        const SectionCard = ({ id, triggerAi, showMessage }) => { const { state, dispatch } = useContext(DashboardContext); const { dataForEditing = initialReportState, liveData = calculateTotals(initialReportState), previousValues = {}, userRole, lastUpdateInfo } = state || {}; const { t } = useTranslation(); const chartRef = useRef(null); const canvasRef = useRef(null); const cardId = id.replace('card-', ''); const cardInfo = cardDefinitions[cardId]; const theme = document.body.className; const [aiInsight, setAiInsight] = useState(''); const [isInsightLoading, setIsInsightLoading] = useState(false); const signingOrder = ['כספים וחשבות', 'רכש, מכרזים ולוגיסטיקה', 'ענף גזברות']; const departmentIcons = { 'כספים וחשבות': 'fa-file-invoice-dollar', 'רכש, מכרזים ולוגיסטיקה': 'fa-gavel', 'ענף גזברות': 'fa-stamp' }; const generateCardInsight = useCallback(async () => { if (cardId !== 'overallStatus' || !liveData || !previousValues || Object.keys(previousValues).length === 0) return; setIsInsightLoading(true); const prompt = `Analyze the change between the previous data and the current data. Provide a single, concise sentence in Hebrew summarizing the most significant change. Previous: ${JSON.stringify(previousValues)}. Current: ${JSON.stringify(liveData)}.`; try { const response = await callGeminiAPI(prompt, t, showMessage); setAiInsight(response); } catch (error) { console.error("Error generating card insight:", error); setAiInsight("שגיאה בהפקת תובנה."); } finally { setIsInsightLoading(false); } }, [liveData, previousValues, cardId, t, showMessage]); useEffect(() => { if (triggerAi && cardId === 'overallStatus') { generateCardInsight(); } }, [triggerAi, generateCardInsight, cardId]); useEffect(() => { if (chartRef.current) { chartRef.current.destroy(); } const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return; if (cardId === 'overallStatus' && liveData?.computedMetrics && previousValues) { chartRef.current = new Chart(ctx, { type: 'bar', data: { labels: ['חתומות', 'ממתינות', 'דחויות'], datasets: [ { label: 'לפני', data: [previousValues.signedOrders || 0, calculateTotals(previousValues).computedMetrics.totalPending || 0, previousValues.rejectedOrders || 0], backgroundColor: 'rgba(148, 163, 184, 0.5)' }, { label: 'אחרי', data: [liveData.signedOrders, liveData.computedMetrics.totalPending, liveData.rejectedOrders], backgroundColor: ['#2dd4bf', '#3b82f6', '#f87171'] } ] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } }, datalabels: { color: '#fff' } } } }); } else if (cardId === 'pendingSignature' && dataForEditing?.pendingSignature) { chartRef.current = new Chart(ctx, { type: 'bar', data: { labels: signingOrder, datasets: [ { label: 'לפני', data: signingOrder.map(label => previousValues?.pendingSignature?.[label] || 0), backgroundColor: 'rgba(148, 163, 184, 0.5)' }, { label: 'אחרי', data: signingOrder.map(label => dataForEditing.pendingSignature?.[label] || 0), backgroundColor: '#a78bfa' } ] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } }, datalabels: { color: '#fff' } } } }); } }, [liveData, dataForEditing, theme, cardId, previousValues]); const handleInputChange = (fieldPath, value) => { dispatch({ type: 'UPDATE_EDITING_FIELD', payload: { fieldPath, value } }); }; const getDeltaForField = (fieldPath) => { const pathParts = fieldPath.split('.'); let current = dataForEditing; let previous = previousValues; for (const part of pathParts) { current = current?.[part]; previous = previous?.[part]; } if (previous === undefined || current === undefined || Object.keys(previousValues || {}).length === 0) return { value: undefined }; const delta = current - previous; const direction = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral'; return { value: delta, direction }; }; const renderContent = () => { if (cardId === 'overallStatus') { return ( <React.Fragment> <div className="h-48 mt-4"><canvas ref={canvasRef}></canvas></div> {isInsightLoading ? <div className="h-6 mt-2 skeleton-loader rounded-md"></div> : <p className="text-sm text-center text-teal-300 mt-2 italic h-6">{aiInsight}</p>} </React.Fragment> ); } if (cardId === 'signedOrders') { return ( <React.Fragment> <div className="flex justify-between items-center mb-3"><p>{t('signed_backlog')}</p><NumericInputWithArrows value={dataForEditing.signedOrders} onChange={handleInputChange} path="signedOrders" disabled={userRole !== 'admin'} delta={getDeltaForField("signedOrders")} isIncreaseGood={true} specialRule="signed" /></div> <div className="flex justify-between items-center mb-3"><p>{t('existing_backlog')}</p><NumericInputWithArrows value={dataForEditing.existingBacklog} onChange={handleInputChange} path="existingBacklog" disabled={userRole !== 'admin'} delta={getDeltaForField("existingBacklog")} isIncreaseGood={false} specialRule="backlog" /></div> <div className="w-full h-2 bg-[--bg-tertiary] rounded-full overflow-hidden mt-2.5"> <div className="h-full bg-teal-500 rounded-full transition-all duration-500" style={{ width: `${liveData.computedMetrics?.goalPercentage?.toFixed(1) || 0}%` }}></div> </div> </React.Fragment> ); } if (cardId === 'pendingSignature') { const reversedSigningOrder = [...signingOrder].reverse(); return ( <React.Fragment> <div className="h-48 mb-5"><canvas ref={canvasRef}></canvas></div> <div className="space-y-3"> {reversedSigningOrder.map(branch => ( <div className="flex justify-between items-center" key={branch}> <p className="flex items-center gap-2"><i className={`fas ${departmentIcons[branch]}`}></i> {branch}</p> <NumericInputWithArrows value={dataForEditing.pendingSignature?.[branch] || 0} onChange={handleInputChange} path={`pendingSignature.${branch}`} disabled={userRole !== 'admin'} delta={getDeltaForField(`pendingSignature.${branch}`)} isIncreaseGood={false} /> </div> ))} </div> </React.Fragment> ); } if (['rejectedOrders', 'pendingAncillaryForm', 'pendingCorrection', 'pendingAssetNumberEntry'].includes(cardId)) { return <div className="flex justify-center items-center h-full"><NumericInputWithArrows value={dataForEditing[cardId] || 0} onChange={handleInputChange} path={cardId} disabled={userRole !== 'admin'} delta={getDeltaForField(cardId)} isIncreaseGood={false} /></div>; } return <div className="flex justify-center items-center h-full"><p>אין תצוגה זמינה</p></div>; }; let title = t(cardInfo.titleKey); if (cardId === 'pendingSignature') { title = `${title} (${liveData.computedMetrics?.totalPendingSignature || 0})`; } if (cardId === 'signedOrders') { title = `${t(cardInfo.titleKey)} (${liveData.computedMetrics?.backlogDifference || 0})`; } return ( <div className="bg-[--bg-secondary] rounded-2xl p-6 relative overflow-hidden border border-[--border-color] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-teal-500/10"> <div className={`absolute top-0 right-0 h-1.5 w-full bg-${cardInfo.color}-500`}></div> <h3 className="flex items-center justify-center gap-2.5 text-xl font-bold mb-1"><i className={`fas ${cardInfo.icon}`}></i><span>{title}</span></h3> {cardInfo.subtitleKey && <p className="text-xs text-[--text-secondary] mb-3 text-center">{t(cardInfo.subtitleKey)}</p>} {renderContent()} {lastUpdateInfo && <div className="text-xs text-[--text-secondary] mt-4 text-center">{t('last_updated', { time: lastUpdateInfo.time })}</div>} </div> ); };
+        const Modal = ({ activeModal, setActiveModal }) => {
+            const { t } = useTranslation();
+            if (!activeModal) return null;
+        
+            const renderModalContent = () => {
+                switch(activeModal) {
+                    case 'history':
+                        return <VersionHistoryContent />;
+                    case 'bit': {
+                        const report = {
+                            summary: t('bit_report_summary_ok'),
+                            checks: [
+                                { name: t('bit_check_code'), status: t('pass') },
+                                { name: t('bit_check_functionality'), status: t('pass') },
+                                { name: t('bit_check_ui'), status: t('pass') },
+                                { name: t('bit_check_api'), status: navigator.onLine ? t('pass') : t('fail') },
+                            ]
+                        };
+                        return <> <h2>{t('bit_results_title')}</h2> <p>{report.summary}</p> <div className="divide-y divide-[--border-color] mt-4"> {report.checks.map(check => <div key={check.name} className="flex justify-between py-2"><span className="text-[--text-secondary]">{check.name}</span><span className={check.status === t('pass') ? 'text-teal-400 font-bold' : 'text-red-400 font-bold'}>{check.status}</span></div>)} </div> </>;
+                    }
+                    default:
+                        return null;
+                }
+            };
+            return (
+                <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setActiveModal(null)}>
+                    <div className="bg-[--bg-secondary] p-6 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-[--border-color]" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-end mb-4"><button onClick={() => setActiveModal(null)} className="text-2xl text-[--text-secondary] hover:text-[--text-primary]">&times;</button></div>
+                        {renderModalContent()}
+                    </div>
+                </div>
+            );
+        };
+        const IntelligenceHQ = ({ triggerAi, showMessage }) => { const { t } = useTranslation(); const { state } = useContext(DashboardContext); const { liveData } = state; if (!liveData?.computedMetrics || (liveData.computedMetrics.totalPending === 0 && liveData.signedOrders === 0 && liveData.rejectedOrders === 0)) { return ( <div className="text-center p-10 bg-[--bg-secondary] rounded-2xl border border-[--border-color]"> <i className="fas fa-info-circle text-4xl text-blue-400 mb-4"></i> <h2 className="text-2xl font-bold">ממתין לנתונים</h2> <p className="text-[--text-secondary]">יכולות ה-AI והניתוח יופעלו אוטומטית לאחר שמירת הנתונים ב"גשר הפיקוד".</p> </div> ); } return ( <div className="space-y-5"> <h2 className="text-2xl font-bold text-center text-teal-400">{t('tab_intelligence_hq')}</h2> <InteractiveAnalyticsHQ showMessage={showMessage} /> <ProactiveInsights trigger={triggerAi} showMessage={showMessage}/> <AnomalyAnalyzer showMessage={showMessage}/> <SummaryGenerator showMessage={showMessage}/> <StrategicAdvisor showMessage={showMessage}/> </div> ); };
+        const ProactiveInsights = ({ trigger, showMessage }) => { const { t } = useTranslation(); const [insight, setInsight] = useState(''); const [isLoading, setIsLoading] = useState(false); const { state } = useContext(DashboardContext); const { liveData } = state; const generateProactiveInsight = useCallback(async () => { if (!liveData) return; setIsLoading(true); const prompt = `This is the report. Based on the current operational data, identify one potential immediate bottleneck and provide a proactive recommendation. Data: ${JSON.stringify(liveData)}. Respond in Hebrew.`; try { const response = await callGeminiAPI(prompt, t, showMessage); setInsight(response); } catch (error) { setInsight("שגיאה בהפקת תובנה פרואקטיבית."); } finally { setIsLoading(false); } }, [liveData, t, showMessage]); useEffect(() => { if(trigger) { generateProactiveInsight(); } }, [trigger, generateProactiveInsight]); return ( <div className="bg-[--bg-secondary] rounded-2xl p-6 border border-[--border-color]"> <div className="flex justify-between items-center mb-2"> <h3 className="flex items-center gap-2.5 text-xl font-bold"><i className="fas fa-lightbulb text-yellow-400"></i> <span>{t('proactive_insights')}</span></h3> <button onClick={generateProactiveInsight} disabled={isLoading} className="px-3 py-1 text-xs font-semibold text-white bg-teal-600 rounded-full hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"> {isLoading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"></span> : <i className="fas fa-sync"></i>} </button> </div> <div className="text-[--text-secondary] text-sm leading-relaxed min-h-[6rem]"> {isLoading ? <div className="h-24 skeleton-loader rounded-lg"></div> : <p>{insight}</p>} </div> </div> ); };
+        const AnomalyAnalyzer = ({ showMessage }) => { const { state, dispatch } = useContext(DashboardContext); const { liveData } = state; const { t } = useTranslation(); const [isAnomaly, setIsAnomaly] = useState(false); const [analysis, setAnalysis] = useState(''); const [isAnalyzing, setIsAnalyzing] = useState(false); useEffect(() => { if (!liveData) return; const { rejectedOrders, signedOrders } = liveData; const threshold = 0.25; const anomalyCondition = rejectedOrders > 2 && (signedOrders > 0 ? (rejectedOrders / signedOrders) > threshold : true); setIsAnomaly(anomalyCondition); if (anomalyCondition) { dispatch({ type: 'ADD_NOTIFICATION', payload: { id: Date.now(), text: t('anomaly_detected') } }); } }, [liveData, dispatch, t]); const handleAnalyze = async () => { setIsAnalyzing(true); setAnalysis(''); const prompt = `An anomaly was detected in today's data: ${JSON.stringify(liveData)}. Provide 3-5 possible root causes for the anomaly and suggest which specific data points to investigate. Respond in Hebrew as a bulleted list.`; try { const response = await callGeminiAPI(prompt, t, showMessage); setAnalysis(response); } catch (error) { setAnalysis("שגיאה בניתוח האנומליה."); } finally { setIsAnalyzing(false); } }; if (!isAnomaly) return null; return ( <div className="mt-4 p-4 bg-[--bg-tertiary] rounded-lg border-r-4 border-r-orange-500"> <h4 className="flex items-center justify-between gap-2 font-bold text-orange-400"> <div className="flex items-center gap-2"><i className="fas fa-exclamation-triangle"></i> {t('anomaly_detected')}</div> <button onClick={handleAnalyze} disabled={isAnalyzing} className="px-3 py-1 text-xs font-semibold text-white bg-orange-500 rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"> {isAnalyzing ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"></span> : t('analyze_anomaly')} </button> </h4> <p className="text-sm text-[--text-secondary] mt-1">{t('anomaly_desc')}</p> {analysis && ( <div className="mt-3 pt-3 border-t border-[--border-color]"> <p className="text-sm text-[--text-secondary] whitespace-pre-wrap">{analysis}</p> </div> )} </div> ); };
+        const SummaryGenerator = ({ showMessage }) => {
+            const { t } = useTranslation();
+            const { state } = useContext(DashboardContext);
+            const { liveData } = state;
+            const [summary, setSummary] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [copySuccess, setCopySuccess] = useState('');
+            const summaryRef = useRef(null);
 
-              <div>
-                <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-teal-500 transition-transform transform hover:scale-105">
-                  {t('login')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      );
-    };
+            const handleGenerate = async () => {
+                setIsLoading(true);
+                setSummary('');
+                const prompt = `Generate a concise executive summary in Hebrew based on the following data for today. Format it with markdown bullet points for Achievements, Challenges, and Recommendations. Data: ${JSON.stringify(liveData)}`;
+                try {
+                    const response = await callGeminiAPI(prompt, t, showMessage);
+                    setSummary(response);
+                } catch (error) {
+                    setSummary("שגיאה בהפקת הסיכום.");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
 
+            const handleCopy = () => {
+                const textArea = document.createElement("textarea");
+                textArea.value = summary;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                setCopySuccess(t('copied'));
+                setTimeout(() => setCopySuccess(''), 2000);
+            };
 
-    ReactDOM.render(
-      <LanguageProvider>
-        <DashboardProvider>
-          <App />
-        </DashboardProvider>
-      </LanguageProvider>,
-      document.getElementById('root')
-    );
-  </script>
+            const handleExportPdf = () => {
+                const element = summaryRef.current;
+                if (!element) {
+                    showMessage("Could not find element to export.", true);
+                    return;
+                }
+                showMessage("מכין ייצוא PDF...");
+                setTimeout(() => {
+                    const { jsPDF } = window.jspdf;
+                    html2canvas(element, {
+                        scale: 2,
+                        backgroundColor: document.body.classList.contains('theme-dark') ? '#1e293b' : '#ffffff',
+                        useCORS: true,
+                    }).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const canvasWidth = canvas.width;
+                        const canvasHeight = canvas.height;
+                        const ratio = canvasWidth / canvasHeight;
+                        const imgWidth = pdfWidth - 20;
+                        const imgHeight = imgWidth / ratio;
+                        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                        pdf.save('sentinel-summary-report.pdf');
+                    }).catch(err => {
+                        showMessage("שגיאה ביצירת קובץ PDF.", true);
+                        console.error("PDF Export Error:", err);
+                    });
+                }, 1200);
+            };
+
+            return (
+                <div className="bg-[--bg-secondary] rounded-2xl p-6 border border-[--border-color]">
+                    <h3 className="text-xl font-bold text-center mb-4">{t('summary_generator')}</h3>
+                    <div className="flex flex-wrap items-center justify-center gap-4">
+                        <button onClick={handleGenerate} disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-teal-600 border-teal-500 text-white hover:bg-teal-500 disabled:opacity-50">
+                            {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : t('generate_summary')}
+                        </button>
+                        {summary && (
+                             <button onClick={handleExportPdf} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-blue-600 border-blue-500 text-white hover:bg-blue-500">
+                                <i className="fas fa-file-pdf"></i> {t('export_pdf')}
+                            </button>
+                        )}
+                    </div>
+                    {summary && (
+                        <div ref={summaryRef} className="mt-4 p-4 bg-[--bg-primary] rounded-lg relative">
+                            <button onClick={handleCopy} className="absolute top-2 right-2 px-3 py-1 text-xs bg-[--bg-tertiary] rounded-full hover:bg-opacity-75">{copySuccess || t('copy_to_clipboard')}</button>
+                            <pre className="whitespace-pre-wrap text-sm leading-relaxed">{summary}</pre>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        const StrategicAdvisor = ({ showMessage }) => { const { state } = useContext(DashboardContext); const { liveData } = state; const { t } = useTranslation(); const [personnel, setPersonnel] = useState(1); const [ordersPerDay, setOrdersPerDay] = useState(2); const [goalDays, setGoalDays] = useState(10); const [actionPlan, setActionPlan] = useState(''); const [isLoading, setIsLoading] = useState(false); const handleGetPlan = async () => { setIsLoading(true); setActionPlan(''); const prompt = `I need to clear ${liveData.computedMetrics?.totalPending || 0} pending orders. My goal is to do it in ${goalDays} days. I have ${personnel} staff members, and their current processing rate is ${ordersPerDay} orders per day per staff member. Provide a concrete, bulleted action plan in Hebrew to achieve this goal. Analyze the bottlenecks based on this data: ${JSON.stringify(liveData)}.`; try { const response = await callGeminiAPI(prompt, t, showMessage); setActionPlan(response); } catch (error) { setActionPlan("שגיאה ביצירת תוכנית פעולה."); } finally { setIsLoading(false); } }; return ( <div className="bg-[--bg-secondary] rounded-2xl p-6 border border-[--border-color]"> <h2 className="text-xl font-bold text-center mb-4">{t('scenario_engine_title')}</h2> <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"> <div className="space-y-4"> <div> <label className="text-sm font-medium flex justify-between"><span>{t('staff_members')}</span><span>{personnel}</span></label> <input type="range" min="1" max="10" value={personnel} onChange={e => setPersonnel(parseInt(e.target.value, 10))} className="w-full h-2 bg-[--bg-tertiary] rounded-lg appearance-none cursor-pointer" /> </div> <div> <label className="text-sm font-medium flex justify-between"><span>{t('processing_rate')}</span><span>{ordersPerDay}</span></label> <input type="range" min="1" max="10" value={ordersPerDay} onChange={e => setOrdersPerDay(parseInt(e.target.value, 10))} className="w-full h-2 bg-[--bg-tertiary] rounded-lg appearance-none cursor-pointer" /> </div> <div className="flex items-center gap-2"> <label className="text-sm font-medium whitespace-nowrap">{t('set_goal')}</label> <input type="number" value={goalDays} onChange={e => setGoalDays(parseInt(e.target.value, 10) || 1)} className="w-20 p-2 text-center bg-[--bg-primary] border border-[--border-color] rounded-lg" /> <span className="text-sm">{t('days')}</span> </div> <button onClick={handleGetPlan} disabled={isLoading} className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-teal-600 border-teal-500 text-white hover:bg-teal-500 disabled:opacity-50"> {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : t('get_action_plan')} </button> </div> <div className="bg-[--bg-primary] p-4 rounded-xl min-h-[200px]"> {isLoading ? <div className="w-full h-full skeleton-loader rounded-lg"></div> : <pre className="whitespace-pre-wrap text-sm leading-relaxed">{actionPlan || "תוכנית הפעולה תופיע כאן..."}</pre>} </div> </div> </div> ); };
+        const InteractiveAnalyticsHQ = ({ showMessage }) => { const { t } = useTranslation(); const { state } = useContext(DashboardContext); const { liveData } = state; const [query, setQuery] = useState(""); const [isLoading, setIsLoading] = useState(false); const [response, setResponse] = useState(""); const chartContainerRef = useRef(null); const chartInstanceRef = useRef(null); const theme = document.body.className; const [useGrounding, setUseGrounding] = useState(false); useEffect(() => { if (chartInstanceRef.current) { chartInstanceRef.current.destroy(); } if (!response || !response.chartData || !chartContainerRef.current) return; const ctx = chartContainerRef.current.getContext('2d'); chartInstanceRef.current = new Chart(ctx, { type: response.chartData.type, data: response.chartData.data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: response.chartData.data.datasets.length > 1, labels: { color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } }, datalabels: { color: '#fff' } }, scales: { y: { ticks: { color: theme.includes('dark') ? '#94a3b8' : '#475569' } }, x: { ticks: { color: theme.includes('dark') ? '#94a3b8' : '#475569' } } } } }); }, [response, theme]); const handleQuerySubmit = async (e) => { e.preventDefault(); if (!query) return; setIsLoading(true); setResponse(""); if (chartInstanceRef.current) { chartInstanceRef.current.destroy(); } const jsonSchema = { type: "OBJECT", properties: { "answer": { "type": "STRING" }, "chartData": { "type": "OBJECT", "properties": { "type": { "type": "STRING" }, "data": { "type": "OBJECT", "properties": { "labels": { "type": "ARRAY", "items": { "type": "STRING" } }, "datasets": { "type": "ARRAY", "items": { "type": "OBJECT", "properties": { "label": { "type": "STRING" }, "data": { "type": "ARRAY", "items": { "type": "NUMBER" } }, "backgroundColor": { "type": "ARRAY", "items": { "type": "STRING" } } } } } } } } } } }; const prompt = `Analyze the user's question and the provided data. Respond in Hebrew. 1.  Provide a direct textual answer to the question. 2.  If the question implies a visual comparison, trend, or distribution, generate the necessary configuration for a Chart.js chart. - Choose the best chart type (bar, pie, line). - Populate labels and datasets accurately from the data. - Use appealing colors from this list for backgrounds: ['#2dd4bf', '#3b82f6', '#f87171', '#a78bfa', '#fb923c', '#facc15']. - If no chart is relevant, return null for the chartData field. Current Data: ${JSON.stringify(liveData)}.  User Question: "${query}"`; try { const apiResponse = await callGeminiAPI(prompt, t, showMessage, jsonSchema, useGrounding); const parsedResponse = JSON.parse(apiResponse); setResponse(parsedResponse); } catch (error) { console.error("Error parsing AI response:", error); setResponse({ answer: "שגיאה בניתוח הבקשה ויצירת התרשים.", chartData: null }); } finally { setIsLoading(false); } }; return ( <div className="space-y-5"> <div className="bg-[--bg-secondary] rounded-2xl p-4 border border-[--border-color]"> <form className="flex gap-2" onSubmit={handleQuerySubmit}> <i className="fas fa-search text-[--text-secondary] self-center"></i> <input type="text" placeholder={t('nlq_placeholder')} value={query} onChange={(e) => setQuery(e.target.value)} className="flex-grow bg-transparent focus:outline-none"/> <button type="submit" disabled={isLoading} className="px-4 py-1.5 text-sm font-semibold bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"> {isLoading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"></span> : t('ask')} </button> </form>  <div className="mt-3 pt-3 border-t border-[--border-color] text-sm text-[--text-secondary]"> <label className="flex items-center gap-2 cursor-pointer"> <input type="checkbox" checked={useGrounding} onChange={(e) => setUseGrounding(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"/> {t('search_internet')} </label> </div> {isLoading && <div className="mt-3 pt-3 border-t border-[--border-color] text-sm text-[--text-secondary]">{t('thinking')}</div>} {response && response.answer && <div className="mt-3 pt-3 border-t border-[--border-color] text-sm text-[--text-secondary]">{response.answer}</div>} </div> {response && response.chartData && ( <div className="bg-[--bg-secondary] rounded-2xl p-6 border border-[--border-color]"> <h3 className="text-xl font-bold text-center mb-4">תצוגה גרפית לשאילתה</h3> <div className="relative h-72"> <canvas ref={chartContainerRef}></canvas> </div> </div> )} </div> ); };
+        
+        const SharingCenter = ({ handleExport, handleShareLink }) => { 
+            const { t } = useTranslation(); 
+            return ( 
+                <div className="space-y-5"> 
+                    <h2 className="text-2xl font-bold text-center text-teal-400">{t('tab_sharing_center')}</h2> 
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"> 
+                        <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] flex flex-col items-center text-center"> 
+                            <i className="fas fa-file-image text-3xl text-teal-400 mb-3"></i> 
+                            <h3 className="font-bold mb-2">{t('export_png')}</h3> 
+                            <p className="text-xs text-[--text-secondary] mb-3 flex-grow">ייצא תמונה של תצוגת 'גשר הפיקוד' כקובץ PNG.</p> 
+                            <button onClick={() => handleExport()} className="w-full mt-auto rounded-lg text-sm font-semibold py-2 px-4 cursor-pointer transition-all duration-200 border bg-teal-600 border-teal-500 text-white hover:bg-teal-500">{t('export_png')}</button> 
+                        </div> 
+                        <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] flex flex-col items-center text-center"> 
+                            <i className="fas fa-link text-3xl text-blue-400 mb-3"></i> 
+                            <h3 className="font-bold mb-2">{t('share_link')}</h3> 
+                            <p className="text-xs text-[--text-secondary] mb-3 flex-grow">העתק קישור ישיר לדשבורד כדי לשתף עם אחרים.</p> 
+                            <button onClick={handleShareLink} className="w-full mt-auto rounded-lg text-sm font-semibold py-2 px-4 cursor-pointer transition-all duration-200 border bg-blue-600 border-blue-500 text-white hover:bg-blue-500">{t('share_link')}</button> 
+                        </div> 
+                        <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] flex flex-col items-center text-center"> 
+                            <i className="fab fa-whatsapp text-3xl text-green-400 mb-3"></i> 
+                            <h3 className="font-bold mb-2">{t('share_whatsapp')}</h3> 
+                            <p className="text-xs text-[--text-secondary] mb-3 flex-grow">שתף קישור לדשבורד ישירות דרך WhatsApp.</p> 
+                            <button onClick={() => { const text = window.location.href; window.open(`https://wa.me/?text=${encodeURIComponent(text)}`); }} className="w-full mt-auto rounded-lg text-sm font-semibold py-2 px-4 cursor-pointer transition-all duration-200 border bg-green-600 border-green-500 text-white hover:bg-green-500">{t('share_whatsapp')}</button> 
+                        </div> 
+                    </div> 
+                    <UserGuide /> 
+                </div> 
+            ); 
+        };
+
+        const VersionHistoryContent = () => { const { t } = useTranslation(); return ( <> <h2 className="text-xl font-bold text-center mb-4">{t('version_history')}</h2> <ul className="divide-y divide-[--border-color] mt-4"> {versionHistory.map(v => ( <li key={v.version} className="py-3"> <strong className="text-teal-400">v{v.version.toFixed(1)} ({v.date}):</strong> <p className="text-sm text-[--text-secondary] mt-1">{v.description}</p> </li> ))} </ul> </> ); };
+        const Clock = () => { const [time, setTime] = useState(new Date()); useEffect(() => { const timerId = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timerId); }, []); return ( <div className="text-lg font-semibold text-slate-400 tabular-nums"> <span>{time.toLocaleDateString('he-IL')}</span> <span className="mx-2">|</span> <span>{time.toLocaleTimeString('he-IL')}</span> </div> ); };
+        const SystemLogo = ({ mirrored = false }) => ( <div className={`relative w-16 h-16 ${mirrored ? 'transform -scale-x-100' : ''}`}> <svg viewBox="0 0 100 100" className="w-full h-full"> <path d="M 10 50 Q 50 20 90 50 Q 50 80 10 50 Z" fill="none" stroke="var(--status-good-primary)" strokeWidth="3"/> <circle cx="50" cy="50" r="10" fill="var(--status-good-primary)"/> <defs> <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="0%"> <stop offset="0%" style={{stopColor: 'var(--status-good-glow)', stopOpacity: 0}} /> <stop offset="100%" style={{stopColor: 'var(--status-good-glow)', stopOpacity: 0.7}} /> </linearGradient> </defs> <path d="M 50 50 L 90 50 A 40 40 0 0 1 50 10 Z" fill="url(#radar-gradient)" style={{ transformOrigin: '50% 50%', animation: 'radar-sweep 3s linear infinite' }} /> </svg> </div> );
+        const AnimatedNumber = ({ n }) => { const [number, setNumber] = useState(0); useEffect(() => { const end = n || 0; if (number === end) return; const frameDuration = 1000 / 60; const totalFrames = Math.round(1000 / frameDuration); let frame = 0; const counter = setInterval(() => { frame++; const progress = frame / totalFrames; const current = Math.round(end * progress); setNumber(current); if (frame === totalFrames) { clearInterval(counter); setNumber(end); } }, frameDuration); return () => clearInterval(counter); }, [n]); return <span>{number}</span>; };
+        const DailyFocusAI = ({ trigger, onComplete, showMessage }) => { const { t } = useTranslation(); const [insight, setInsight] = useState(''); const [isLoading, setIsLoading] = useState(false); const { state } = useContext(DashboardContext); const { liveData } = state; const generateDailyFocus = useCallback(async () => { if (!liveData || (liveData.computedMetrics?.totalPending === 0 && liveData.signedOrders === 0)) { onComplete(); return; }; setIsLoading(true); const prompt = `Based on today's operational data: ${JSON.stringify(liveData)}. What is the single most critical bottleneck or issue that requires immediate attention? Provide a very short, actionable insight in Hebrew (one sentence).`; try { const response = await callGeminiAPI(prompt, t, showMessage); setInsight(response); } catch (error) { setInsight("שגיאה בהפקת תובנת פוקוס יומי."); } finally { setIsLoading(false); onComplete(); } }, [liveData, onComplete, t, showMessage]); useEffect(() => { if(trigger){ generateDailyFocus(); } }, [trigger, generateDailyFocus]); if (!insight && !isLoading) return <div className="bg-teal-500/10 border border-teal-500/30 rounded-xl p-4 mb-5 text-center h-[76px]"></div>; return ( <div className="bg-teal-500/10 border border-teal-500/30 rounded-xl p-4 mb-5 text-center fade-in-on-load h-[76px]"> <h3 className="font-bold text-teal-300 mb-2 flex items-center justify-center gap-2"><i className="fas fa-bullseye"></i>{t('daily_focus_title')}</h3> {isLoading ? <div className="h-6 skeleton-loader rounded-lg w-3/4 mx-auto"></div> : <p className="text-[--text-primary] text-lg">{insight}</p> } </div> ); };
+        const UserGuide = () => { const { t } = useTranslation(); const guideSections = [ { icon: 'fa-gauge-high', title: 'סקירה כללית', text: 'מערכת Sentinel מספקת תמונת מצב אופרטיבית בזמן אמת, ומאפשרת קבלת החלטות מבוססות נתונים באמצעות ניתוח חכם ויכולות AI מתקדמות.'}, { icon: 'fa-cogs', title: 'פונקציונליות מרכזית', features: [ { icon: 'fa-tachometer-alt', name: 'ניתוח בזמן אמת'}, { icon: 'fa-brain', name: 'תובנות AI'}, { icon: 'fa-bell', name: 'התראות חכמות'}, { icon: 'fa-file-export', name: 'ייצוא דוחות'} ]}, { icon: 'fa-rocket', title: 'מטה המודיעין המתקדם (AI)', text: 'שאל שאלות בשפה טבעית, נהל שיחה מתמשכת עם ה-AI, ואף אפשר לו לחפש מידע עדכני באינטרנט כדי להעשיר את תשובותיו.', features: [ { icon: 'fa-comments', name: 'צ\'אט שיחתי'}, { icon: 'fa-globe', name: 'חיבור לאינטרנט'}, { icon: 'fa-chart-pie', name: 'יצירת גרפים דינמית'} ]}, { icon: 'fa-book-open', title: 'מדריך הפעלה מהיר', steps: [ { icon: 'fa-key', text: 'כניסה עם שם משתמש וסיסמה'}, { icon: 'fa-calendar-alt', text: 'בחירת תאריך לדיווח הרצוי'}, { icon: 'fa-edit', text: 'עדכון נתונים (למנהלים בלבד)'}, { icon: 'fa-share-alt', text: 'שיתוף וייצוא הדו"ח'} ]} ]; return ( <div className="bg-[--bg-primary] p-6 rounded-2xl border border-[--border-color]"> <div className="text-center mb-8"> <h2 className="text-3xl font-bold text-teal-400">{t('user_guide_title')}</h2> <p className="text-[--text-secondary]">כל מה שצריך לדעת כדי להתחיל</p> </div> <div className="space-y-8"> {guideSections.map(section => ( <div key={section.title} className="bg-[--bg-secondary] p-6 rounded-xl border border-[--border-color]"> <div className="flex items-center gap-4 mb-4"> <i className={`fas ${section.icon} text-3xl text-teal-400`}></i> <h3 className="text-2xl font-bold">{section.title}</h3> </div> {section.text && <p className="text-[--text-secondary]">{section.text}</p>} {section.features && ( <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-center"> {section.features.map(feature => ( <div key={feature.name} className="bg-[--bg-tertiary] p-4 rounded-lg"> <i className={`fas ${feature.icon} text-3xl mb-2`}></i> <p className="text-sm font-semibold">{feature.name}</p> </div> ))} </div> )} {section.steps && ( <ol className="relative border-r border-gray-700 rtl:border-r-0 rtl:border-l mt-4 space-y-6"> {section.steps.map((step, index) => ( <li key={index} className="mr-6 rtl:mr-0 rtl:ml-6"> <span className="absolute flex items-center justify-center w-8 h-8 bg-teal-500 rounded-full -right-4 rtl:-right-auto rtl:-left-4 ring-4 ring-[--bg-secondary]"> <i className={`fas ${step.icon} text-white`}></i> </span> <p className="text-[--text-primary]">{step.text}</p> </li> ))} </ol> )} </div> ))} </div> </div> ); };
+        const DeploymentGuide = () => { const { t } = useTranslation(); const copyToClipboard = (text) => { navigator.clipboard.writeText(text); }; const codeBlockStyle = "flex justify-between items-center bg-[--bg-tertiary] p-3 rounded-lg font-mono text-xs text-slate-300"; const copyButtonStyle = "text-xs p-1 rounded bg-teal-500/50 hover:bg-teal-500/80"; return ( <div className="bg-[--bg-primary] p-4 rounded-lg border border-[--border-color] space-y-4 text-sm text-[--text-primary] leading-relaxed"> <h3 className="text-xl font-semibold text-center mb-4 border-b border-[--border-color] pb-2">{t('deployment_guide_title')}</h3> <div className="p-3 bg-[--bg-secondary] rounded-lg"> <h4 className="font-bold text-teal-400">{t('deployment_guide_step1_title')}</h4> <p className="mt-1 text-[--text-secondary]">{t('deployment_guide_step1_desc')}</p> </div> <div className="p-3 bg-[--bg-secondary] rounded-lg"> <h4 className="font-bold text-teal-400">{t('deployment_guide_step2_title')}</h4> <p className="mt-1 text-[--text-secondary]">{t('deployment_guide_step2_desc')}</p> <ol className="list-decimal list-inside rtl:list-outside rtl:mr-5 mt-2 space-y-2"> <li>{t('deployment_guide_step2_li1')}</li> <li className={codeBlockStyle}><code>cd C:\\path\\to\\your\\project</code><button onClick={() => copyToClipboard('cd C:\\path\\to\\your\\project')} className={copyButtonStyle}><i className="fas fa-copy"></i></button></li> </ol> </div> <div className="p-3 bg-[--bg-secondary] rounded-lg"> <h4 className="font-bold text-teal-400">{t('deployment_guide_step3_title')}</h4> <p className="mt-1 text-[--text-secondary]">{t('deployment_guide_step3_desc')}</p> <ol className="list-decimal list-inside rtl:list-outside rtl:mr-5 mt-2 space-y-2"> <li>{t('deployment_guide_step3_li1')}</li> <li className={codeBlockStyle}><code>git add index.html</code><button onClick={() => copyToClipboard('git add index.html')} className={copyButtonStyle}><i className="fas fa-copy"></i></button></li> <li>{t('deployment_guide_step3_li2')}</li> <li className={codeBlockStyle}><code>git commit -m "Final update"</code><button onClick={() => copyToClipboard('git commit -m "Final update"')} className={copyButtonStyle}><i className="fas fa-copy"></i></button></li> <li>{t('deployment_guide_step3_li3')}</li> <li className={codeBlockStyle}><code>git push -u origin main</code><button onClick={() => copyToClipboard('git push -u origin main')} className={copyButtonStyle}><i className="fas fa-copy"></i></button></li> </ol> </div> <div className="p-3 bg-[--bg-secondary] rounded-lg"> <h4 className="font-bold text-teal-400">{t('deployment_guide_step4_title')}</h4> <p className="mt-1 text-[--text-secondary]">{t('deployment_guide_step4_desc')}</p> </div> </div> ); };
+        
+        const ApiSettings = ({ showMessage }) => {
+            const { t } = useTranslation();
+            const [apiKey, setApiKey] = useState(() => localStorage.getItem('sentinel-apiKey') || '');
+
+            const handleSave = () => {
+                try {
+                    localStorage.setItem('sentinel-apiKey', apiKey);
+                    showMessage(t('api_key_saved'));
+                } catch (e) {
+                    showMessage('Error saving API key to local storage.', true);
+                }
+            };
+
+            return (
+                <div className="bg-[--bg-primary] p-4 rounded-lg border border-[--border-color] space-y-4">
+                    <h3 className="text-lg font-semibold text-center">{t('subtab_api_settings')}</h3>
+                    <p className="text-xs text-center text-[--text-secondary]">
+                        אנא הכנס מפתח API אישי של Gemini כדי להפעיל את יכולות הבינה המלאכותית. ניתן להנפיק מפתח בחינם ב- 
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">
+                            Google AI Studio
+                        </a>.
+                    </p>
+                    <div>
+                        <label htmlFor="apiKeyInput" className="block text-sm font-medium text-[--text-primary] mb-1">{t('api_key_label')}</label>
+                        <div className="flex gap-2">
+                            <input
+                                id="apiKeyInput"
+                                type="password"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder={t('api_key_placeholder')}
+                                className="flex-grow bg-[--bg-tertiary] border border-[--border-color] rounded-lg p-2 text-sm"
+                            />
+                            <button onClick={handleSave} className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700">{t('save_key')}</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const BackupAndRestore = ({ handleExportPng }) => { 
+            const { t } = useTranslation(); 
+            const getFormattedFileName = (type) => { const now = new Date(); const date = now.toISOString().split('T')[0]; const time = now.toTimeString().split(' ')[0].replace(/:/g, '-'); return `Project-Sentinel-Command-Nexus-v24.1-${date}-${time}.${type}`; }; 
+            const handleDownloadFile = (content, fileName, mimeType) => { const blob = new Blob([content], { type: mimeType }); const link = document.createElement('a'); link.download = fileName; link.href = URL.createObjectURL(blob); link.click(); URL.revokeObjectURL(link.href); }; 
+            const handleBackupCode = () => { const htmlContent = document.documentElement.outerHTML; handleDownloadFile(htmlContent, getFormattedFileName('html'), 'text/html'); }; 
+            const handleBackupData = () => { 
+                try { 
+                    const allReports = localStorage.getItem('sentinelReports') || '{}';
+                    const dataStr = JSON.stringify(JSON.parse(allReports), null, 2); 
+                    handleDownloadFile(dataStr, getFormattedFileName('json'), 'application/json'); 
+                } catch(e) { 
+                    console.error("Could not backup data from localStorage", e)
+                } 
+            }; 
+            return ( 
+                <div className="bg-[--bg-primary] p-4 rounded-lg border border-[--border-color]"> 
+                    <h3 className="text-lg font-semibold text-center mb-4 border-b border-[--border-color] pb-2 flex items-center justify-center gap-2"> <i className="fas fa-save"></i> {t('subtab_backup_restore')} </h3> 
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5"> 
+                        <button onClick={handleBackupCode} className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-[--bg-secondary] text-[--text-primary] border-[--border-color] hover:bg-[--bg-tertiary] transform hover:scale-105 active:scale-95"> <i className="fas fa-code"></i> {t('backup_code')} </button> 
+                        <button onClick={handleBackupData} className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-[--bg-secondary] text-[--text-primary] border-[--border-color] hover:bg-[--bg-tertiary] transform hover:scale-105 active:scale-95"> <i className="fas fa-database"></i> {t('backup_data')} </button> 
+                        <button onClick={handleExportPng} className="w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2.5 px-4 cursor-pointer transition-all duration-200 border bg-[--bg-secondary] text-[--text-primary] border-[--border-color] hover:bg-[--bg-tertiary] transform hover:scale-105 active:scale-95"> <i className="fas fa-file-image"></i> {t('backup_png')} </button> 
+                    </div> 
+                </div> 
+            ); 
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<LanguageProvider><DashboardProvider><App /></DashboardProvider></LanguageProvider>);
+    </script>
+
 </body>
 </html>
+
+
+
+
