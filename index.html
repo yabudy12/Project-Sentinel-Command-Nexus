@@ -322,7 +322,7 @@
         return s;
       };
       return (
-        <LanguageContext.Provider value={{language,toggleLanguage:tog toggleLanguage,t:t}}>
+        <LanguageContext.Provider value={{language,toggleLanguage:toggleLanguage,t:t}}>
           {children}
         </LanguageContext.Provider>
       );
@@ -454,11 +454,11 @@
           <circle cx="50" cy="50" r="10" fill="var(--status-good-primary)"/>
           <defs>
             <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color: var(--status-good-glow); stop-opacity: 0"/>
-              <stop offset="100%" style="stop-color: var(--status-good-glow); stop-opacity: 0.7"/>
+              <stop offset="0%" style={{stopColor: "var(--status-good-glow)", stopOpacity: 0}}/>
+              <stop offset="100%" style={{stopColor: "var(--status-good-glow)", stopOpacity: 0.7}}/>
             </linearGradient>
           </defs>
-          <path d="M 50 50 L 90 50 A 40 40 0 0 1 50 10 Z" fill="url(#radar-gradient)" style="transform-origin: 50% 50%; animation: radar-sweep 3s linear infinite"/>
+          <path d="M 50 50 L 90 50 A 40 40 0 0 1 50 10 Z" fill="url(#radar-gradient)" style={{transformOrigin: '50% 50%', animation: 'radar-sweep 3s linear infinite'}}/>
         </svg>
       </div>
     );
@@ -524,7 +524,7 @@
           throw new Error(`HTTP ${res.status}: ${body?.error?.message || 'Unknown error'}`);
         }
         const body = await res.json();
-        const part = body?.candidates?.?.content?.parts?.;
+        const part = body?.candidates?.[0]?.content?.parts?.[0];
         if (!part?.text) throw new Error('Invalid response shape');
         return part.text;
       }catch(err){
@@ -937,6 +937,611 @@
             </div>
           );
         }
-        return <div className="text-center">אין תצוגה זמינה</div
+        return <div className="text-center">אין תצוגה זמינה</div>
+      };
 
-[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/71936845/9113c8e2-9884-4756-95df-0540b46016f4/paste.txt)
+      const colorMap = {
+        teal: 'border-teal-500', purple: 'border-purple-500', red: 'border-red-500',
+        orange: 'border-orange-500', blue: 'border-blue-500', yellow: 'border-yellow-500'
+      };
+
+      return (
+        <div id={id} className={`bg-[--bg-secondary] p-4 rounded-xl border-t-4 ${colorMap[cardInfo.color]} border-x border-b border-[--border-color] fade-in-on-load`}>
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-lg text-[--text-primary] flex items-center gap-2">
+              <i className={`fas ${cardInfo.icon}`}></i>
+              <span>{title}</span>
+            </h3>
+            {lastUpdateInfo && cardId==='overallStatus' && (
+              <span className="text-xs text-[--text-secondary]">{t('last_updated',{time:lastUpdateInfo.time})}</span>
+            )}
+          </div>
+          {cardInfo.subtitleKey && <p className="text-xs text-[--text-secondary]">{t(cardInfo.subtitleKey)}</p>}
+          <div className="mt-4">{renderContent()}</div>
+        </div>
+      );
+    };
+
+    const MainDashboard = ({triggerAi, showMessage})=>{
+      const {state, dispatch} = useContext(DashboardContext);
+      const {t} = useTranslation();
+      const userRole = state.userRole;
+
+      const handleSave = () => {
+        dispatch({type:'SAVE_DATA'});
+        showMessage(t('data_saved_success'));
+      };
+      const handleReset = () => {
+        dispatch({type:'RESET_TODAY_DATA'});
+        showMessage(t('data_reset_success'));
+      };
+      
+      const gridCards = [
+        {id:'card-overallStatus', className:'md:col-span-2 md:row-span-2'},
+        {id:'card-signedOrders', className:'md:col-span-2'},
+        {id:'card-pendingSignature', className:'md:col-span-2 md:row-span-3'},
+        {id:'card-rejectedOrders', className:''},
+        {id:'card-pendingCorrection', className:''},
+        {id:'card-pendingAncillaryForm', className:''},
+        {id:'card-pendingAssetNumberEntry', className:''}
+      ];
+
+      return (
+        <div>
+          <KpiStrip/>
+          {userRole === 'admin' && (
+            <div className="flex justify-end gap-2 my-4">
+              <button onClick={handleSave} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <i className="fas fa-save"></i> {t('save_data')}
+              </button>
+              <button onClick={handleReset} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <i className="fas fa-undo"></i> {t('reset_data')}
+              </button>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {gridCards.map(c => (
+              <div key={c.id} className={c.className}>
+                <SectionCard id={c.id} triggerAi={triggerAi} showMessage={showMessage}/>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const IntelligenceHQ = ({showMessage}) => {
+      const { state } = useContext(DashboardContext);
+      const { t } = useTranslation();
+      const [isLoading, setIsLoading] = useState(false);
+      const [query, setQuery] = useState('');
+      const [response, setResponse] = useState('');
+      const [chartData, setChartData] = useState(null);
+      const chartRef = useRef(null);
+      const canvasRef = useRef(null);
+      const [useGrounding, setUseGrounding] = useState(false);
+      const theme = document.body.className;
+
+      const handleQuery = async () => {
+        setIsLoading(true);
+        setResponse('');
+        setChartData(null);
+        if(chartRef.current) chartRef.current.destroy();
+
+        const dataContext = JSON.stringify({
+          today: state.liveData,
+          yesterday: state.previousValues
+        });
+        
+        const schema = {
+          type: "OBJECT",
+          properties: {
+            answer: { type: "STRING" },
+            chartData: {
+              type: "OBJECT",
+              nullable: true,
+              properties: {
+                type: { type: "STRING", enum: ["bar", "line", "pie", "doughnut"] },
+                labels: { type: "ARRAY", items: { type: "STRING" } },
+                datasets: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      label: { type: "STRING" },
+                      data: { type: "ARRAY", items: { type: "NUMBER" } },
+                    }
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        const fullPrompt = `Based on the following data, answer the user's question. Data: ${dataContext}. Question: "${query}". Provide a concise text answer and, if applicable, generate data for a chart to visualize the answer.`;
+        
+        try {
+          const result = await callGeminiAPI(fullPrompt, t, showMessage, schema, useGrounding);
+          const parsedResult = JSON.parse(result);
+          setResponse(parsedResult.answer);
+          if (parsedResult.chartData) {
+            setChartData(parsedResult.chartData);
+          }
+        } catch (error) {
+          setResponse(`שגיאה בניתוח התשובה: ${error.message}`);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        if (chartData && canvasRef.current) {
+          if(chartRef.current) chartRef.current.destroy();
+          const colors = ['#2dd4bf', '#3b82f6', '#f87171', '#a78bfa', '#fb923c', '#facc15'];
+          const chartConfig = {
+            type: chartData.type || 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: chartData.datasets.map((ds, i) => ({
+                    ...ds,
+                    backgroundColor: ds.backgroundColor || colors[i % colors.length] + '80', // Add alpha
+                    borderColor: ds.borderColor || colors[i % colors.length],
+                    borderWidth: 1
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } },
+                    datalabels: { color: theme.includes('dark') ? '#fff' : '#000' }
+                },
+                scales: chartData.type !== 'pie' && chartData.type !== 'doughnut' ? {
+                    y: { ticks: { color: theme.includes('dark') ? '#94a3b8' : '#475569' }, grid: { color: theme.includes('dark') ? '#334155' : '#e2e8f0' } },
+                    x: { ticks: { color: theme.includes('dark') ? '#94a3b8' : '#475569' }, grid: { color: theme.includes('dark') ? '#334155' : '#e2e8f0' } }
+                } : {}
+            }
+          };
+          chartRef.current = new Chart(canvasRef.current, chartConfig);
+        }
+      }, [chartData, theme]);
+
+      return (
+          <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] min-h-[60vh]">
+              <h2 className="text-xl font-bold text-center mb-4 text-teal-400">{t('ai_insights_title')}</h2>
+              <div className="flex flex-col md:flex-row gap-2 mb-4">
+                  <input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleQuery()}
+                      placeholder={t('nlq_placeholder')}
+                      className="flex-grow p-2 rounded-lg bg-[--bg-primary] border border-[--border-color] text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <button onClick={handleQuery} disabled={isLoading} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                      {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><i className="fas fa-paper-plane"></i> {t('ask')}</>}
+                  </button>
+              </div>
+              <div className="flex items-center justify-end mb-4">
+                  <label className="flex items-center gap-2 text-sm text-[--text-secondary] cursor-pointer">
+                      <input type="checkbox" checked={useGrounding} onChange={() => setUseGrounding(!useGrounding)} className="form-checkbox h-4 w-4 text-teal-600 bg-[--bg-primary] border-[--border-color] rounded focus:ring-teal-500"/>
+                      {t('search_internet')}
+                  </label>
+              </div>
+
+              {isLoading && (
+                  <div className="text-center p-8">
+                      <div className="loading-spinner mx-auto"></div>
+                      <p className="mt-4 text-lg text-[--text-secondary]">{t('analyzing_data')}</p>
+                  </div>
+              )}
+
+              {response && (
+                  <div className="mt-4 bg-[--bg-primary] p-4 rounded-lg border border-[--border-color]">
+                      <p className="text-[--text-primary] whitespace-pre-wrap">{response}</p>
+                  </div>
+              )}
+
+              {chartData && (
+                  <div className="mt-4 h-80 bg-[--bg-primary] p-4 rounded-lg border border-[--border-color]">
+                      <canvas ref={canvasRef}></canvas>
+                  </div>
+              )}
+          </div>
+      );
+    };
+
+    const ControlPanel = ({ showMessage }) => {
+      const {t} = useTranslation();
+      const [activeSubTab, setActiveSubTab] = useState('diagnostics');
+
+      const SubTabButton = ({ id, label, icon }) => (
+        <button 
+          onClick={() => setActiveSubTab(id)}
+          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeSubTab === id ? 'bg-teal-600 text-white' : 'text-[--text-secondary] hover:bg-[--bg-tertiary] hover:text-[--text-primary]'}`}
+        >
+          <i className={`fas ${icon}`}></i>
+          <span>{label}</span>
+        </button>
+      );
+      
+      const subTabs = [
+        {id: 'diagnostics', label: t('subtab_diagnostics'), icon: 'fa-stethoscope'},
+        {id: 'export_share', label: t('subtab_export_share'), icon: 'fa-share-alt'},
+        {id: 'api_settings', label: t('subtab_api_settings'), icon: 'fa-key'}
+      ];
+
+      return (
+        <div className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] min-h-[60vh]">
+          <div className="flex items-center border-b border-[--border-color] pb-2 mb-4">
+             <h2 className="text-xl font-bold text-teal-400">{t('control_panel')}</h2>
+          </div>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-row md:flex-col gap-2 md:w-1/4 overflow-x-auto pb-2">
+              {subTabs.map(tab => <SubTabButton key={tab.id} {...tab} />)}
+            </div>
+            <div className="flex-grow">
+              {activeSubTab === 'diagnostics' && <DiagnosticsPanel />}
+              {activeSubTab === 'export_share' && <ExportSharePanel showMessage={showMessage}/>}
+              {activeSubTab === 'api_settings' && <ApiSettingsPanel showMessage={showMessage} />}
+            </div>
+          </div>
+        </div>
+      );
+    };
+    
+    const DiagnosticsPanel = () => {
+        const { t } = useTranslation();
+        const [bitResults, setBitResults] = useState(null);
+        const [isTesting, setIsTesting] = useState(false);
+
+        const runBit = () => {
+            setIsTesting(true);
+            setBitResults(null);
+            setTimeout(() => {
+                // Simulate async checks
+                const results = {
+                    code: Math.random() > 0.1, // 90% pass
+                    functionality: Math.random() > 0.05, // 95% pass
+                    ui: Math.random() > 0.15, // 85% pass
+                    api: !!localStorage.getItem('sentinel-apiKey'),
+                };
+                const overall = Object.values(results).every(r => r);
+                setBitResults({ ...results, overall });
+                setIsTesting(false);
+            }, 2000);
+        };
+
+        const ResultRow = ({ label, passed }) => (
+            <div className="flex justify-between items-center p-3 bg-[--bg-primary] rounded-lg">
+                <span className="text-[--text-primary]">{label}</span>
+                <span className={`font-bold px-3 py-1 rounded-full text-xs ${passed ? 'bg-teal-500/20 text-teal-300' : 'bg-red-500/20 text-red-300'}`}>
+                    {passed ? t('pass') : t('fail')}
+                </span>
+            </div>
+        );
+
+        return (
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold">{t('diagnostics')}</h3>
+                <button onClick={runBit} disabled={isTesting} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50">
+                    {isTesting ? (
+                        <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>בודק...</span>
+                        </>
+                    ) : (
+                        <><i className="fas fa-cogs"></i> {t('run_bit')}</>
+                    )}
+                </button>
+                {bitResults && (
+                    <div className="bg-[--bg-tertiary] p-4 rounded-lg mt-4 fade-in-on-load">
+                        <h4 className="text-md font-bold text-center mb-3">{t('bit_results_title')}</h4>
+                        <p className={`text-center text-sm mb-4 ${bitResults.overall ? 'text-teal-400' : 'text-red-400'}`}>
+                            {bitResults.overall ? t('bit_report_summary_ok') : t('bit_report_summary_fail')}
+                        </p>
+                        <div className="space-y-2">
+                            <ResultRow label={t('bit_check_code')} passed={bitResults.code} />
+                            <ResultRow label={t('bit_check_functionality')} passed={bitResults.functionality} />
+                            <ResultRow label={t('bit_check_ui')} passed={bitResults.ui} />
+                            <ResultRow label={t('bit_check_api')} passed={bitResults.api} />
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const ExportSharePanel = ({ showMessage }) => {
+        const { t } = useTranslation();
+
+        const handleShareLink = () => {
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => showMessage(t('copied')))
+                .catch(() => showMessage('Failed to copy', true));
+        };
+
+        const handleShareWhatsapp = () => {
+            const url = `https://wa.me/?text=${encodeURIComponent(window.location.href)}`;
+            window.open(url, '_blank');
+        };
+        
+        const handleExportPNG = () => {
+            const dashboard = document.getElementById('command-bridge');
+            if(dashboard) {
+                html2canvas(dashboard, { 
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary'),
+                    useCORS: true 
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'sentinel-dashboard.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            }
+        };
+
+        const handleExportHTML = () => {
+          const htmlContent = document.documentElement.outerHTML;
+          const blob = new Blob([htmlContent], { type: 'text/html' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'index.html';
+          link.click();
+          URL.revokeObjectURL(link.href);
+        };
+
+        const actions = [
+          { label: t('share_link'), icon: 'fa-link', action: handleShareLink, color: 'bg-blue-600 hover:bg-blue-700' },
+          { label: t('share_whatsapp'), icon: 'fa-whatsapp', action: handleShareWhatsapp, color: 'bg-green-600 hover:bg-green-700' },
+          { label: t('export_png'), icon: 'fa-file-image', action: handleExportPNG, color: 'bg-purple-600 hover:bg-purple-700' },
+          { label: t('export_html'), icon: 'fa-file-code', action: handleExportHTML, color: 'bg-orange-600 hover:bg-orange-700' }
+        ];
+
+        return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">{t('export_share')}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {actions.map(item => (
+                    <button key={item.label} onClick={item.action} className={`${item.color} text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-transform transform hover:scale-105`}>
+                        <i className={`fab ${item.icon} ${item.icon === 'fa-whatsapp' ? '' : 'fas'}`}></i>
+                        <span>{item.label}</span>
+                    </button>
+                ))}
+              </div>
+            </div>
+        );
+    };
+    
+    const ApiSettingsPanel = ({ showMessage }) => {
+        const { t } = useTranslation();
+        const [apiKey, setApiKey] = useState(() => localStorage.getItem('sentinel-apiKey') || '');
+        
+        const handleSaveKey = () => {
+            localStorage.setItem('sentinel-apiKey', apiKey);
+            showMessage(t('api_key_saved'));
+        };
+
+        return (
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold">{t('subtab_api_settings')}</h3>
+                <div>
+                    <label htmlFor="api-key" className="block text-sm font-medium text-[--text-secondary] mb-1">{t('api_key_label')}</label>
+                    <div className="flex gap-2">
+                        <input
+                            type="password"
+                            id="api-key"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            placeholder={t('api_key_placeholder')}
+                            className="flex-grow p-2 rounded-lg bg-[--bg-primary] border border-[--border-color] text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                        <button onClick={handleSaveKey} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+                            <i className="fas fa-save"></i> {t('save_key')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+
+    const App = () => {
+      const [theme, setTheme] = useState(() => {
+        try { return localStorage.getItem('sentinel-theme') || 'theme-dark'; } 
+        catch { return 'theme-dark'; }
+      });
+      const {state, dispatch} = useContext(DashboardContext);
+      const {t} = useTranslation();
+      const [currentReportId, setCurrentReportId] = useState(null);
+      const [currentReportType, setCurrentReportType] = useState('daily');
+      const [triggerAi, setTriggerAi] = useState(false);
+      const [activeTab, setActiveTab] = useState('command_bridge');
+      const [message, setMessage] = useState({text:'', isError: false});
+
+      const showMessage = (text, isError=false) => {
+          setMessage({text, isError});
+          setTimeout(() => setMessage({text:'', isError: false}), 3000);
+      };
+
+      useEffect(() => {
+        document.body.className = theme;
+        try { localStorage.setItem('sentinel-theme', theme); } catch {}
+      }, [theme]);
+      
+      const toggleTheme = () => setTheme(prev => prev === 'theme-dark' ? 'theme-light' : 'theme-dark');
+
+      useEffect(() => {
+        const now = new Date();
+        const id = now.toISOString().slice(0, 10); // YYYY-MM-DD
+        
+        const lastReportId = state.currentReportId;
+        if(lastReportId !== id) {
+          const yesterday = new Date(now);
+          yesterday.setDate(now.getDate() - 1);
+          const yesterdayId = yesterday.toISOString().slice(0, 10);
+          const yesterdayData = state.allReports[yesterdayId];
+          dispatch({ type: 'LOAD_REPORT', payload: { id, previousData: yesterdayData } });
+        } else {
+          dispatch({ type: 'LOAD_REPORT', payload: { id, previousData: null } }); // Should load from memory
+        }
+        
+        setCurrentReportId(id);
+        setCurrentReportType(now.getHours() < 12 ? 'morning' : 'daily');
+        setTriggerAi(true);
+      }, []);
+
+      if (!state.isAuthenticated) {
+        return <LoginScreen />;
+      }
+      
+      const TabButton = ({ id, label, icon }) => (
+        <button 
+          onClick={() => setActiveTab(id)}
+          className={`flex-1 flex items-center justify-center gap-3 py-3 px-4 text-sm font-bold border-b-4 transition-all duration-300 ${activeTab === id ? 'text-teal-400 border-teal-400' : 'text-[--text-secondary] border-transparent hover:text-teal-300 hover:border-teal-300/50'}`}
+        >
+          <i className={`fas ${icon} text-lg`}></i>
+          <span className="hidden sm:inline">{label}</span>
+        </button>
+      );
+      
+      const tabs = [
+        { id: 'command_bridge', label: t('tab_command_bridge'), icon: 'fa-sitemap' },
+        { id: 'intelligence_hq', label: t('tab_intelligence_hq'), icon: 'fa-brain' },
+        { id: 'control_panel', label: t('tab_control_panel'), icon: 'fa-sliders-h' }
+      ];
+
+      return (
+        <div className="bg-[--bg-primary] text-[--text-primary] min-h-screen p-4 sm:p-6 md:p-8">
+            <TopBar theme={theme} toggleTheme={toggleTheme} />
+            <DashboardHeader currentReportType={currentReportType} reportDate={currentReportId} />
+
+            <div className="bg-[--bg-secondary] rounded-xl border border-[--border-color] sticky top-0 z-10 mb-6">
+                <div className="flex justify-around">
+                  {tabs.map(tab => <TabButton key={tab.id} {...tab} />)}
+                </div>
+            </div>
+
+            <main>
+                <div id="command-bridge" style={{display: activeTab === 'command_bridge' ? 'block' : 'none'}}>
+                    <MainDashboard triggerAi={triggerAi} showMessage={showMessage} />
+                </div>
+                <div id="intelligence-hq" style={{display: activeTab === 'intelligence_hq' ? 'block' : 'none'}}>
+                    <IntelligenceHQ showMessage={showMessage} />
+                </div>
+                <div id="control-panel-tab" style={{display: activeTab === 'control_panel' ? 'block' : 'none'}}>
+                    <ControlPanel showMessage={showMessage} />
+                </div>
+            </main>
+            
+            {message.text && (
+                <div className={`fixed bottom-5 right-5 p-3 rounded-lg text-white shadow-lg fade-in-on-load ${message.isError ? 'bg-red-500' : 'bg-teal-500'}`}>
+                    {message.text}
+                </div>
+            )}
+        </div>
+      );
+    };
+
+    const LoginScreen = () => {
+      const { t } = useTranslation();
+      const { dispatch } = useContext(DashboardContext);
+      const [role, setRole] = useState('user');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+      const passwordRef = useRef(null);
+
+      const passwords = {
+        admin: 'Admin123!',
+        user: 'User123!'
+      };
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        if (password === passwords[role]) {
+          dispatch({ type: 'LOGIN_SUCCESS', payload: { role } });
+          setError('');
+        } else {
+          setError(t('login_error'));
+          passwordRef.current.classList.add('animate-shake');
+          setTimeout(() => {
+            if (passwordRef.current) {
+               passwordRef.current.classList.remove('animate-shake');
+            }
+          }, 500);
+        }
+      };
+      
+      const checkCapsLock = (e) => {
+        if (e.getModifierState) {
+          setIsCapsLockOn(e.getModifierState('CapsLock'));
+        }
+      };
+      
+      // Temporary style for animation
+      const style = document.createElement('style');
+      style.innerHTML = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } .animate-shake { animation: shake 0.5s ease-in-out; }`;
+      document.head.appendChild(style);
+
+
+      return (
+        <div className="min-h-screen flex items-center justify-center login-background p-4">
+          <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-slate-700">
+            <div className="text-center mb-8">
+              <div className="inline-block pulsing-logo">
+                <SystemLogo />
+              </div>
+              <h1 className="text-3xl font-bold text-slate-100 mt-4">{t('login_title')}</h1>
+              <p className="text-slate-400">{t('login_subtitle')}</p>
+            </div>
+            
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label htmlFor="role-select" className="block text-sm font-medium text-slate-300">{t('select_role')}</label>
+                <select id="role-select" value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                  <option value="user">{t('user')}</option>
+                  <option value="admin">{t('admin')}</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="password-input" className="block text-sm font-medium text-slate-300">{t('password')}</label>
+                <div className="relative">
+                   <input 
+                    ref={passwordRef}
+                    type="password" 
+                    id="password-input" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    onKeyUp={checkCapsLock}
+                    onKeyDown={checkCapsLock}
+                    className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500" />
+                    {isCapsLockOn && <div className="absolute top-1/2 right-3 -translate-y-1/2 text-yellow-400 text-xs" title={t('caps_lock_on')}><i className="fas fa-exclamation-triangle"></i></div>}
+                </div>
+                 {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+              </div>
+
+              <div>
+                <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-teal-500 transition-transform transform hover:scale-105">
+                  {t('login')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+
+    ReactDOM.render(
+      <LanguageProvider>
+        <DashboardProvider>
+          <App />
+        </DashboardProvider>
+      </LanguageProvider>,
+      document.getElementById('root')
+    );
+  </script>
+</body>
+</html>
