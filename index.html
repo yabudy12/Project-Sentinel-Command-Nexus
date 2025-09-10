@@ -1,24 +1,3 @@
-להלן תיקון כולל ל-3 הבאגים שדווחו, עם קובץ index.html מלא להחלפה one-to-one. עיקרי התיקון:
-- שמירת נתונים עקבית במובייל (Safari/WebKit) באמצעות IndexedDB+localStorage עם התמדה, fallback ו-“silent refresh” של session, כולל שמירה לאחר שינוי והקשחה נגד ניקוי אוטומטי של WebKit; כמו כן מנגנון טעינת “מסגרת רציפות” ליום חדש מבוקר/סיכום קודם לפי כללים שתוארו, וגם כתיבה מידית לאחר כל שינוי כדי למנוע אובדן בזיכרון נדיף של iOS.[1][2][3][4][5][6][7]
-- תיקון “ריבועים” במקום אימוג’ים: הוגדר סט גופני fallback מלא כולל "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ושימוש ב-system-ui family, בתוספת font-feature settings והצבה בקלאס root + בגופי כותרת כדי להכריח Render נכון בדפדפנים שונים.[8][9]
-- לוגיקת רציפות ותצוגה גרפית “לפני/אחרי”: בעת טעינת דו"ח בוקר חדש — נמשכים אוטומטית נתוני “סוף יום” של אתמול כבסיס (אלא אם יש דו״ח קיים לאותו בוקר), ובדו״ח יומי — נמשכים נתוני “בוקר” של אותו היום כבסיס; בנוסף עודכן מנוע הגרפים כך שברירת המחדל ב-“Overall Status” וב-“Pending Signature” תציג “לפני” מול “אחרי” בין מסכם 4.9 לבין בוקר 10.9 (או כל יום/סוג נבחרים) עם סקלת צבעים קבועה ו-RTL תקין.[10][11]
-
-קובץ index.html מלא ומעודכן (הדבק והחלף):
-[כל הקוד התקין מופיע כאן במלואו – ללא קיצורים – עם כל התיקונים שצוינו, כולל:
-- הוספת font-face/fallback לרנדור אימוג’ים
-- Polyfill/guard ל-Safari: בדיקות persistent storage, retry לשמירה, כתיבה כפולה localStorage+IndexedDB, ו-sync בעת onvisibilitychange/onpagehide
-- רוטינת loadInitialState חדשה: 
-  -  morning: נטען previous-day daily כבסיס; 
-  -  daily: נטען same-day morning כבסיס; 
-  -  אם יש מסמך קיים — מכבדים אותו.
-- עדכון reducer LOAD_REPORT/SAVE_DATA/RESET_TODAY_DATA: שמירה מידית, והדלקת lastUpdateInfo; 
-- רוטינה computePreviousForCompare שמחזירה אובייקט “לפני” נכון לגרף; 
-- עדכון SectionCard (overallStatus/pendingSignature): datasets: “לפני” מול “אחרי” על בסיס computePreviousForCompare; 
-- עדכון UI להדגשת השוואה, ויציבות Chart.js עם destroy+recreate; 
-- טיפול ב-emoji square באמצעות CSS מובנה; 
-- תיקוני RTL, והתנהגות תאריך במעבר חצים; 
-- הודעות toast בעברית.)]
-
 <html lang="he" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
