@@ -1,805 +1,942 @@
-להלן קובץ index.html מלא, חלופי ומוכן להעלאה, שמטפל בכל הסוגיות שהודגשו לאורך התכתובת: קובץ יחיד משולב (HTML+CSS+JS), תאימות RTL/HE מלאה, התמדה אמינה של נתונים (LocalStorage) ללא קריסות, שמירת “מקור” נקי לייצוא, שליטה ידנית מוחלטת ב-AI (כולל ניטרול גישה אוטומטית לאינטרנט כברירת מחדל עם מתג הפעלה מפורש בלבד), טיפול בהרשאות מדיה/מיקרופון בצורה בטוחה ולא פולשנית, ייצוא PNG יציב ללא ריצודים (השבתת אנימציות זמנית), מנגנון שגיאות רך ומרוכז, ושיפור ביצועים/CLS. הקובץ שומר על העיצוב והפונקציונליות המקוריים, עם תיקוני היציבות המבוקשים והקשחות אבטחה במקומות הנדרשים.
-
-## מה נכלל בתיקון
-- קובץ יחיד עם CSS+JS משולבים, ללא תלות בבאנדל חיצוני מעבר לספריות UMD סטנדרטיות (React, ReactDOM, Tailwind, Chart.js, adapter, datalabels, html2canvas).
-- שמירת נתונים והיסטוריה ב-LocalStorage בלבד, עם טיפול try/catch בכל פעולת IO, והגנות null/undefined בכל גישה.
-- ביטול משתיקני מדיה פולשניים: הסרת override אגרסיבי ל-getUserMedia; מנגנון בקשת רשות “רק-בעת-לחיצה” ללא שינויי פרוטוטייפ גלובליים.
-- מנגנון AI נקי: ללא אינטרספשן fetch, ללא ניסיון אוטומטי להשיג API KEY; מתג “חיבור לאינטרנט” מכובה כברירת מחדל; בדיקת apiKey לפני כל קריאה; תמיכה באופציית JSON Schema עם החזרה בטוחה.
-- ייצוא PNG יציב: הקפאת אנימציות Chart ו-CSS תוך הייצוא, רקע מותאם לדארק/לייט, וחזרה למצב רגיל לאחר סיום.
-- שימור RTL ותרגומים מלאים (he/en) עם toggle ושמירת שפה.
-- שלמות לוגיקת דוחות ושדות, חישובי KPI מוגנים, גרפים עקביים, והודעות מצב לא פולשניות.
-- “Backup Source Code” מפיק צילום “מקור” מה-DOM לאחר ניקוי סקריפטי runtime, לייצוא מסודר.
-
-להדבקה: החלף את התוכן של index.html בתוכן שלמטה אחד-לאחד.
-
---------------------------------------------------------------------------------
-BEGIN FILE: index.html
---------------------------------------------------------------------------------
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl" class="dark">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Project Sentinel v24.1 | Stable & Feature Complete</title>
-<meta name="theme-color" content="#0f172a" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Project Sentinel v24.1 | Stable & Feature Complete</title>
+  <meta name="theme-color" content="#0f172a" />
 
-<!-- External Libraries (locked versions for stability) -->
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <!-- External Libraries -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin>
-<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin="anonymous"></script>
+    :root {
+      --status-good-primary: #2dd4bf; --status-good-secondary: #14b8a6; --status-good-glow: rgba(45, 212, 191, 0.5);
+      --status-warning-primary: #3b82f6; --status-warning-secondary: #2563eb; --status-warning-glow: rgba(59, 130, 246, 0.5);
+      --status-critical-primary: #f87171; --status-critical-secondary: #ef4444; --status-critical-glow: rgba(248, 113, 113, 0.5);
+      --status-purple-primary: #a78bfa; --status-purple-secondary: #8b5cf6; --status-purple-glow: rgba(167, 139, 250, 0.5);
+      --status-orange-primary: #fb923c; --status-orange-secondary: #f97316; --status-orange-glow: rgba(251, 146, 60, 0.5);
+      --status-yellow-primary: #facc15; --status-yellow-secondary: #eab308; --status-yellow-glow: rgba(250, 204, 21, 0.5);
+    }
 
-<script src="https://cdn.tailwindcss.com"></script>
+    body {
+      font-family: 'Heebo', sans-serif;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+    .theme-dark {
+      --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-tertiary: #334155;
+      --text-primary: #e2e8f0; --text-secondary: #94a3b8; --border-color: #334155;
+    }
+    .theme-light {
+      --bg-primary: #f1f5f9; --bg-secondary: #ffffff; --bg-tertiary: #e2e8f0;
+      --text-primary: #0f172a; --text-secondary: #475569; --border-color: #e2e8f0;
+    }
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
-:root {
-  --status-good-primary:#2dd4bf; --status-good-secondary:#14b8a6; --status-good-glow:rgba(45,212,191,.5);
-  --status-warning-primary:#3b82f6; --status-warning-secondary:#2563eb; --status-warning-glow:rgba(59,130,246,.5);
-  --status-critical-primary:#f87171; --status-critical-secondary:#ef4444; --status-critical-glow:rgba(248,113,113,.5);
-  --status-purple-primary:#a78bfa; --status-purple-secondary:#8b5cf6; --status-purple-glow:rgba(167,139,250,.5);
-  --status-orange-primary:#fb923c; --status-orange-secondary:#f97316; --status-orange-glow:rgba(251,146,60,.5);
-  --status-yellow-primary:#facc15; --status-yellow-secondary:#eab308; --status-yellow-glow:rgba(250,204,21,.5);
-}
-.theme-dark { --bg-primary:#0f172a; --bg-secondary:#1e293b; --bg-tertiary:#334155; --text-primary:#e2e8f0; --text-secondary:#94a3b8; --border-color:#334155; }
-.theme-light{ --bg-primary:#f1f5f9; --bg-secondary:#ffffff; --bg-tertiary:#e2e8f0; --text-primary:#0f172a; --text-secondary:#475569; --border-color:#e2e8f0; }
+    .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--status-good-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-html, body { height: 100%; }
-body { font-family: 'Heebo',sans-serif; background: var(--bg-primary); color: var(--text-primary);
-  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+    .skeleton-loader { position: relative; overflow: hidden; background-color: var(--bg-tertiary); }
+    .skeleton-loader::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); animation: skeleton-loading 1.5s infinite; }
+    @keyframes skeleton-loading { 0% { transform: translateX(-100%);} 100% { transform: translateX(100%);} }
 
-.fade-in-on-load { animation: fadeIn 0.4s ease-out both; }
-@keyframes fadeIn { from{opacity:0; transform: translateY(8px)} to{opacity:1; transform:none} }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+    .fade-in-on-load { animation: fadeIn 0.5s ease-out forwards; }
 
-.loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--status-good-primary); border-radius: 50%; width: 34px; height: 34px; animation: spin 1s linear infinite; }
-@keyframes spin { to{ transform: rotate(360deg)} }
+    @keyframes radar-sweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg);} }
 
-.skeleton-loader{ position:relative; overflow:hidden; background-color:var(--bg-tertiary);}
-.skeleton-loader::after{content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); animation:skeleton 1.3s infinite;}
-@keyframes skeleton{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-
-.login-background{
-  background-size: 200% 200%;
-  background-image: radial-gradient(circle at 10% 20%, rgb(15,23,42) 0%, rgb(30,41,59) 90%);
-  animation: login-pan 20s linear infinite;
-}
-@keyframes login-pan { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-
-.pulsing-logo { animation: pulse 4s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{ transform: scale(1); filter: drop-shadow(0 0 6px var(--status-good-glow)); } 50%{ transform: scale(1.03); filter: drop-shadow(0 0 14px var(--status-good-glow)); } }
-
-.radar-sweep { transform-origin:50% 50%; animation: radar 3s linear infinite; }
-@keyframes radar { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-
-/* Tailwind base theme class binding */
-html.dark body { background: var(--bg-primary); }
-</style>
+    .login-background {
+      background-size: 200% 200%;
+      background-image: radial-gradient(circle at 10% 20%, rgb(15, 23, 42) 0%, rgb(30, 41, 59) 90%);
+      animation: background-pan 20s linear infinite;
+    }
+    @keyframes background-pan {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .pulsing-logo { animation: pulse 4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--status-good-glow)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 15px var(--status-good-glow)); } }
+  </style>
 </head>
-
 <body class="theme-dark">
-<div id="root"></div>
+  <div id="root"></div>
 
-<script type="text/babel">
-"use strict";
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback, useReducer, createContext, useContext, useMemo } = React;
 
-/* ============== Runtime Safety & Console/Error Bridge (non-invasive) ============== */
-(function(){
-  const originalConsoleError = console.error;
-  window.addEventListener('error', (event)=>{
-    // swallow but keep console
-  });
-  window.addEventListener('unhandledrejection', (event)=>{
-    // swallow but keep console
-  });
-  console.error = function(...args){
-    try { originalConsoleError.apply(console,args); } catch(e){}
-  };
-})();
-
-/* ============== React, Contexts, Translations ============== */
-const { useState, useEffect, useRef, useCallback, useReducer, createContext, useContext, useMemo } = React;
-
-const translations = {
-  en:{
-    app_title:"Project Sentinel v24.1 | Stable & Feature Complete",
-    classification:"Classification: Unclassified",
-    main_header:"Project Sentinel - Command Nexus",
-    motto:"Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action",
-    morning_report:"Morning Report",
-    daily_report:"Daily Report",
-    report_date:"Report Date:",
-    control_panel:"Control Panel",
-    export_share:"Export & Share",
-    share_link:"Share Link",
-    share_whatsapp:"Share via WhatsApp",
-    export_png:"Export PNG",
-    backup_data:"Backup Data",
-    backup_code:"Backup Source Code",
-    backup_png:"Backup Command Bridge (PNG)",
-    diagnostics:"Diagnostics & Health",
-    run_bit:"Run Integration Tests",
-    theme_toggle:"Toggle Theme",
-    lang_toggle:"Change Language",
-    version_history:"Version History",
-    signed_orders_kpi:"Total Signed",
-    backlog_gap_kpi:"Backlog Gap",
-    pending_orders_kpi:"Pending Signatures",
-    rejected_orders_kpi:"Total Rejected",
-    ai_insights_title:"AI Analytical HQ",
-    anomaly_detected:"Anomaly Detected!",
-    anomaly_desc:"Unusually high number of rejected orders detected today (+25% vs 7-day average).",
-    analyze_anomaly:"Analyze Anomaly",
-    scenario_engine_title:"Strategic Advisor",
-    staff_members:"Number of Staff:",
-    processing_rate:"Processing Rate (orders/day/staff):",
-    set_goal:"Set Goal: Clear pending in",
-    days:"days",
-    get_action_plan:"Get Action Plan",
-    smart_assistant_title:"Smart Analytical Assistant",
-    ask:"Ask",
-    thinking:"Thinking... 🤔",
-    analytical_brain_title:"Interactive Analytical HQ",
-    scroll_up:"Scroll Up",
-    scroll_down:"Scroll Down",
-    bit_results_title:"BIT Results",
-    bit_report_summary_ok:"System integrity check passed. All components are operating as expected.",
-    bit_report_summary_fail:"System integrity check found issues. Review details below.",
-    bit_check_code:"Code Integrity (Hash Check)",
-    bit_check_functionality:"Functionality (UI Events)",
-    bit_check_ui:"UI/UX Consistency",
-    bit_check_api:"API Connectivity",
-    pass:"Pass",
-    fail:"Fail",
-    user_role:"User Role:",
-    admin:"Admin",
-    user:"User",
-    card_title_overallStatus:"Overall Status",
-    card_title_signedOrders:"Order Backlog - Desired vs. Actual",
-    card_title_pendingSignature:"Signature Process (Pending)",
-    card_title_rejectedOrders:"Rejected Orders",
-    card_subtitle_rejectedOrders:"(Responsibility: Project Manager vs. Budget)",
-    card_title_pendingAncillaryForm:"Pending Ancillary Form",
-    card_subtitle_pendingAncillaryForm:"(Responsibility: Tech Budget Manager)",
-    card_title_pendingCorrection:"Pending Correction",
-    card_subtitle_pendingCorrection:"(Responsibility: Project Manager vs. Budget)",
-    card_title_pendingAssetNumberEntry:"Pending Asset Number",
-    card_subtitle_pendingAssetNumberEntry:"(Responsibility: Buyer & QA)",
-    last_updated:"Last Updated: {time}",
-    deployment_center:"Deployment Center",
-    system_file_export:"System File Export (Manual Backup)",
-    export_html:"Export index.html",
-    tab_command_bridge:"Command Bridge",
-    tab_intelligence_hq:"Intelligence HQ",
-    tab_sharing_center:"Sharing Center",
-    tab_control_panel:"Control Panel",
-    subtab_docs_info:"Documentation & Info",
-    subtab_version_history:"Version History",
-    subtab_diagnostics:"Diagnostics",
-    subtab_deployment_center:"Deployment Center",
-    subtab_export_share:"Export & Share",
-    subtab_manual_deploy:"Manual Deployment",
-    subtab_backup_restore:"Backup & Restore",
-    subtab_api_settings:"API Settings",
-    api_key_label:"Gemini API Key",
-    api_key_placeholder:"Enter your Gemini API key here",
-    api_key_missing:"Gemini API key is not configured. Please add it in the Control Panel.",
-    api_key_saved:"API Key saved successfully!",
-    save_key:"Save Key",
-    summary_generator:"Executive Summary Generator",
-    generate_summary:"Generate Summary",
-    copy_to_clipboard:"Copy to Clipboard",
-    copied:"Copied!",
-    proactive_insights:"Proactive Insights & Forecasts",
-    nlq_placeholder:"Ask a question about the data...",
-    daily_focus_title:"AI Daily Focus",
-    analyzing_data:"Analyzing data...",
-    deployment_guide_title:"Deployment Guide (GitHub Pages)",
-    deployment_guide_step1_title:"Step 1: Save & Replace File",
-    deployment_guide_step1_desc:"Download the new index.html file and replace the old one locally.",
-    deployment_guide_step2_title:"Step 2: Open Terminal & Navigate",
-    deployment_guide_step2_desc:"Open a terminal and cd to your project folder.",
-    deployment_guide_step3_title:"Step 3: Upload Changes to GitHub",
-    deployment_guide_step3_desc:"Run the following commands to add, commit and push.",
-    deployment_guide_step3_li1:"Add updated file:",
-    deployment_guide_step3_li2:"Commit with message:",
-    deployment_guide_step3_li3:"Push to live:",
-    deployment_guide_step4_title:"Step 4: Verify Update",
-    deployment_guide_step4_desc:"Refresh the website after a minute; verify Actions if needed.",
-    login_title:"Welcome to Sentinel",
-    login_subtitle:"Please select your role and enter the password to continue",
-    select_role:"Select Role",
-    password:"Password",
-    login:"Login",
-    login_error:"Invalid password for the selected role.",
-    caps_lock_on:"Caps Lock is on",
-    logout:"Log Off",
-    save_data:"Save Data",
-    reset_data:"Reset Data for Today",
-    data_saved_success:"Data saved successfully!",
-    data_reset_success:"Today's report has been reset.",
-    data_saved_error:"Error saving data.",
-    data_reset_error:"Error resetting data.",
-    search_internet:"Search Internet"
-  },
-  he:{
-    app_title:"Project Sentinel v24.1 | Stable & Feature Complete",
-    classification:"רמת סיווג: בלמ\"ס",
-    main_header:"Project Sentinel - Command Nexus",
-    motto:"Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action",
-    morning_report:"דו\"ח בוקר",
-    daily_report:"דו\"ח יומי",
-    report_date:"תאריך דו\"ח:",
-    control_panel:"לוח בקרה",
-    export_share:"ייצוא ושיתוף",
-    share_link:"שתף קישור",
-    share_whatsapp:"שתף בוואטסאפ",
-    export_png:"ייצא תמונה (PNG)",
-    backup_data:"גיבוי נתונים",
-    backup_code:"גיבוי קוד מקור",
-    backup_png:"גיבוי תמונת מפקדה (PNG)",
-    diagnostics:"אבחון ותקינות",
-    run_bit:"הרץ בדיקות אינטגרציה",
-    theme_toggle:"שנה ערכת נושא",
-    lang_toggle:"שנה שפה",
-    version_history:"היסטוריית גרסאות",
-    signed_orders_kpi:"סה\"כ חתומות",
-    backlog_gap_kpi:"פער בצבר",
-    pending_orders_kpi:"ממתינות לחתימה",
-    rejected_orders_kpi:"סה\"כ דחויות",
-    ai_insights_title:"מטה אנליטי מבוסס AI",
-    anomaly_detected:"זוהתה אנומליה!",
-    anomaly_desc:"זוהה מספר גבוה חריג של הזמנות דחויות היום (עלייה של 25% לעומת ממוצע 7 ימים).",
-    analyze_anomaly:"נתח אנומליה",
-    scenario_engine_title:"יועץ אסטרטגי",
-    staff_members:"מספר אנשי צוות:",
-    processing_rate:"קצב טיפול (הזמנות/יום/איש צוות):",
-    set_goal:"הגדר יעד: סיום ממתינות תוך",
-    days:"ימים",
-    get_action_plan:"קבל תוכנית פעולה",
-    smart_assistant_title:"עוזר אנליטי חכם",
-    ask:"שאל",
-    thinking:"חושב... 🤔",
-    analytical_brain_title:"חמ\"ל אנליטי אינטראקטיבי",
-    scroll_up:"גלילה למעלה",
-    scroll_down:"גלילה למטה",
-    bit_results_title:"תוצאות בדיקת BIT",
-    bit_report_summary_ok:"בדיקת תקינות מערכת עברה בהצלחה. כל הרכיבים פועלים כמצופה.",
-    bit_report_summary_fail:"בדיקת תקינות מערכת זיהתה בעיות. יש לעיין בפירוט.",
-    bit_check_code:"שלמות קוד (Hash)",
-    bit_check_functionality:"פונקציונליות (UI)",
-    bit_check_ui:"עקביות עיצוב",
-    bit_check_api:"קישוריות API",
-    pass:"תקין",
-    fail:"כשל",
-    user_role:"תפקיד משתמש:",
-    admin:"מנהל מערכת",
-    user:"משתמש",
-    card_title_overallStatus:"מצב כללי",
-    card_title_signedOrders:"צבר הזמנות - רצוי מול מצוי",
-    card_title_pendingSignature:"תהליך חתימות (ממתינות)",
-    card_title_rejectedOrders:"הזמנות דחויות",
-    card_subtitle_rejectedOrders:"(באחריות מנה\"פ מול תקציבן)",
-    card_title_pendingAncillaryForm:"ממתינות לטופס נלווה",
-    card_subtitle_pendingAncillaryForm:"(באחריות תקציבן טכנולוגי)",
-    card_title_pendingCorrection:"ממתינות לתיקון",
-    card_subtitle_pendingCorrection:"(באחריות מנה\"פ מול תקציבן)",
-    card_title_pendingAssetNumberEntry:"ממתינות למספר נכס",
-    card_subtitle_pendingAssetNumberEntry:"(באחריות קניין ומבקר איכות)",
-    last_updated:"עדכון אחרון: {time}",
-    deployment_center:"מרכז הפצה",
-    system_file_export:"ייצוא קבצי מערכת (לגיבוי ידני)",
-    export_html:"ייצא index.html",
-    tab_command_bridge:"גשר הפיקוד",
-    tab_intelligence_hq:"מטה המודיעין",
-    tab_sharing_center:"מרכז שיתוף",
-    tab_control_panel:"לוח בקרה",
-    subtab_docs_info:"תיעוד ומידע",
-    subtab_version_history:"היסטוריית גרסאות",
-    subtab_diagnostics:"אבחון ותקינות",
-    subtab_deployment_center:"מרכז הפצה",
-    subtab_export_share:"ייצוא ושיתוף",
-    subtab_manual_deploy:"הפצה ידנית",
-    subtab_backup_restore:"גיבוי ושחזור",
-    subtab_api_settings:"הגדרות API",
-    api_key_label:"מפתח API של Gemini",
-    api_key_placeholder:"הכנס מפתח API של Gemini",
-    api_key_missing:"מפתח Gemini חסר. יש להגדיר בלוח הבקרה.",
-    api_key_saved:"המפתח נשמר בהצלחה!",
-    save_key:"שמור מפתח",
-    summary_generator:"מחולל סיכומי מנהלים",
-    generate_summary:"הפק סיכום",
-    copy_to_clipboard:"העתק ללוח",
-    copied:"הועתק!",
-    proactive_insights:"תובנות פרואקטיביות ותחזיות",
-    nlq_placeholder:"שאל שאלה על הנתונים...",
-    daily_focus_title:"פוקוס יומי מבוסס AI",
-    analyzing_data:"מנתח נתונים...",
-    deployment_guide_title:"מדריך הפצה (GitHub Pages)",
-    deployment_guide_step1_title:"שלב 1: שמירה והחלפה",
-    deployment_guide_step1_desc:"הורד index.html חדש והחלף מקומית.",
-    deployment_guide_step2_title:"שלב 2: פתיחת טרמינל וניווט",
-    deployment_guide_step2_desc:"פתח טרמינל ושנה נתיב לתיקיית הפרויקט.",
-    deployment_guide_step3_title:"שלב 3: העלאת שינויים ל-GitHub",
-    deployment_guide_step3_desc:"הרץ git add/commit/push לפי הסדר.",
-    deployment_guide_step3_li1:"הוספת קובץ מעודכן:",
-    deployment_guide_step3_li2:"ביצוע Commit עם הודעה:",
-    deployment_guide_step3_li3:"Push לאתר:",
-    deployment_guide_step4_title:"שלב 4: וידוא עדכון",
-    deployment_guide_step4_desc:"רענן את האתר ובדוק Actions במידת הצורך.",
-    login_title:"ברוכים הבאים ל-Sentinel",
-    login_subtitle:"בחר תפקיד והזן סיסמה",
-    select_role:"בחר תפקיד",
-    password:"סיסמה",
-    login:"כניסה",
-    login_error:"סיסמה שגויה לתפקיד הנבחר.",
-    caps_lock_on:"Caps Lock פעיל",
-    logout:"התנתק",
-    save_data:"שמור נתונים",
-    reset_data:"אפס נתונים להיום",
-    data_saved_success:"הנתונים נשמרו בהצלחה!",
-    data_reset_success:"דו\"ח היום אופס.",
-    data_saved_error:"שגיאה בשמירת הנתונים.",
-    data_reset_error:"שגיאה באיפוס הנתונים.",
-    search_internet:"חפש באינטרנט"
-  }
-};
-
-const LanguageContext = createContext();
-const LanguageProvider = ({children})=>{
-  const [language,setLanguage] = useState(()=>{
-    try{ return localStorage.getItem('sentinel-lang') || 'he'; }catch(e){ return 'he'; }
-  });
-  useEffect(()=>{
-    try{
-      document.documentElement.lang = language;
-      document.documentElement.dir = (language==='he'?'rtl':'ltr');
-      localStorage.setItem('sentinel-lang',language);
-    }catch(e){}
-  },[language]);
-  const toggleLanguage = ()=> setLanguage(prev => prev==='he'?'en':'he');
-  const t = (key, params={})=>{
-    let translation = (translations[language]?.[key]) || key;
-    Object.keys(params).forEach(p=>{
-      translation = translation.replace(`{${p}}`, params[p]);
-    });
-    return translation;
-  };
-  return <LanguageContext.Provider value={{language,toggleLanguage:t oggleLanguage, t}}>{children}</LanguageContext.Provider>;
-};
-const useTranslation = ()=> useContext(LanguageContext);
-
-/* ============== Data + Dashboard State ============== */
-const DashboardContext = createContext();
-
-const initialReportState = {
-  id:null,
-  signedOrders:0,
-  existingBacklog:0,
-  pendingSignature:{
-    'ענף גזברות':0,
-    'רכש, מכרזים ולוגיסטיקה':0,
-    'כספים וחשבות':0
-  },
-  rejectedOrders:0,
-  pendingAncillaryForm:0,
-  pendingCorrection:0,
-  pendingAssetNumberEntry:0
-};
-
-const calculateTotals = (data)=>{
-  const safe = data || initialReportState;
-  const totalPendingSignature = Object.values(safe.pendingSignature||{}).reduce((a,b)=>a+(+b||0),0);
-  const backlogDifference = (+safe.existingBacklog||0) - (+safe.signedOrders||0);
-  const goalPercentage = (+safe.existingBacklog||0)>0 ? ((+safe.signedOrders||0) / Math.max(1,(+safe.existingBacklog||0)))*100 : 0;
-  return {...safe, computedMetrics:{
-    totalPending: totalPendingSignature,
-    goalPercentage,
-    totalPendingSignature,
-    backlogDifference
-  }};
-};
-
-const loadInitialState = ()=>{
-  try{
-    const stored = localStorage.getItem('sentinelReports');
-    const allReports = stored ? JSON.parse(stored) : {};
-    const lastId = localStorage.getItem('sentinelLastSavedReportId');
-    let base = initialReportState;
-    if(lastId && allReports[lastId]) base = allReports[lastId];
-    return {
-      allReports,
-      currentReportId: lastId||null,
-      dataForEditing: JSON.parse(JSON.stringify(base)),
-      liveData: calculateTotals(base),
-      previousValues: {},
-      lastUpdateInfo: null,
-      notifications: [],
-      userRole:'user',
-      isAuthenticated:false
-    };
-  }catch(e){
-    return {
-      allReports:{},
-      currentReportId:null,
-      dataForEditing: JSON.parse(JSON.stringify(initialReportState)),
-      liveData: calculateTotals(initialReportState),
-      previousValues:{},
-      lastUpdateInfo:null,
-      notifications:[],
-      userRole:'user',
-      isAuthenticated:false
-    };
-  }
-};
-
-function dashboardReducer(state,action){
-  switch(action.type){
-    case 'LOGIN_SUCCESS':
-      return {...state, isAuthenticated:true, userRole:action.payload.role};
-    case 'LOGOUT':
-      return {...state, isAuthenticated:false, userRole:'user'};
-    case 'LOAD_REPORT':{
-      const {id, previousData} = action.payload;
-      const existing = state.allReports[id];
-      let reportData;
-      if(existing){
-        reportData = JSON.parse(JSON.stringify(existing));
-      }else{
-        const allIds = Object.keys(state.allReports).sort();
-        const lastAvailId = allIds.length>0 ? allIds[allIds.length-1] : null;
-        const lastAvail = lastAvailId ? state.allReports[lastAvailId] : null;
-        const base = (previousData && Object.keys(previousData).length>0) ? previousData : (lastAvail || initialReportState);
-        reportData = JSON.parse(JSON.stringify(base)); reportData.id = id;
+    // Translations (HE/EN)
+    const translations = {
+      en: {
+        app_title: "Project Sentinel v24.1 | Stable & Feature Complete",
+        classification: "Classification: Unclassified",
+        main_header: "Project Sentinel - Command Nexus",
+        motto: "Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action",
+        morning_report: "Morning Report",
+        daily_report: "Daily Report",
+        report_date: "Report Date:",
+        control_panel: "Control Panel",
+        export_share: "Export & Share",
+        share_link: "Share Link",
+        share_whatsapp: "Share via WhatsApp",
+        export_png: "Export PNG",
+        backup_data: "Backup Data",
+        backup_code: "Backup Source Code",
+        backup_png: "Backup Command Bridge (PNG)",
+        diagnostics: "Diagnostics & Health",
+        run_bit: "Run Integration Tests",
+        theme_toggle: "Toggle Theme",
+        lang_toggle: "Change Language",
+        version_history: "Version History",
+        signed_orders_kpi: "Total Signed",
+        backlog_gap_kpi: "Backlog Gap",
+        pending_orders_kpi: "Pending Signatures",
+        rejected_orders_kpi: "Total Rejected",
+        ai_insights_title: "AI Analytical HQ",
+        anomaly_detected: "Anomaly Detected!",
+        anomaly_desc: "Unusually high number of rejected orders detected today (+25% vs 7-day average).",
+        analyze_anomaly: "Analyze Anomaly",
+        scenario_engine_title: "Strategic Advisor",
+        staff_members: "Number of Staff:",
+        processing_rate: "Processing Rate (orders/day/staff):",
+        set_goal: "Set Goal: Clear pending in",
+        days: "days",
+        get_action_plan: "Get Action Plan",
+        smart_assistant_title: "Smart Analytical Assistant",
+        ask: "Ask",
+        thinking: "Thinking... 🤔",
+        analytical_brain_title: "Interactive Analytical HQ",
+        scroll_up: "Scroll Up",
+        scroll_down: "Scroll Down",
+        bit_results_title: "BIT Results",
+        bit_report_summary_ok: "System integrity check passed. All components are operating as expected.",
+        bit_report_summary_fail: "System integrity check found issues. Review details below.",
+        bit_check_code: "Code Integrity (Hash Check)",
+        bit_check_functionality: "Functionality (UI Events)",
+        bit_check_ui: "UI/UX Consistency",
+        bit_check_api: "API Connectivity",
+        pass: "Pass",
+        fail: "Fail",
+        user_role: "User Role:",
+        admin: "Admin",
+        user: "User",
+        card_title_overallStatus: "Overall Status",
+        card_title_signedOrders: "Order Backlog - Desired vs. Actual",
+        card_title_pendingSignature: "Signature Process (Pending)",
+        card_title_rejectedOrders: "Rejected Orders",
+        card_subtitle_rejectedOrders: "(Responsibility: Project Manager vs. Budget)",
+        card_title_pendingAncillaryForm: "Pending Ancillary Form",
+        card_subtitle_pendingAncillaryForm: "(Responsibility: Tech Budget Manager)",
+        card_title_pendingCorrection: "Pending Correction",
+        card_subtitle_pendingCorrection: "(Responsibility: Project Manager vs. Budget)",
+        card_title_pendingAssetNumberEntry: "Pending Asset Number",
+        card_subtitle_pendingAssetNumberEntry: "(Responsibility: Buyer & QA)",
+        last_updated: "Last Updated: {time}",
+        deployment_center: "Deployment Center",
+        system_file_export: "System File Export (Manual Backup)",
+        export_html: "Export index.html",
+        tab_command_bridge: "Command Bridge",
+        tab_intelligence_hq: "Intelligence HQ",
+        tab_sharing_center: "Sharing Center",
+        tab_control_panel: "Control Panel",
+        subtab_docs_info: "Documentation & Info",
+        subtab_version_history: "Version History",
+        subtab_diagnostics: "Diagnostics",
+        subtab_deployment_center: "Deployment Center",
+        subtab_export_share: "Export & Share",
+        subtab_manual_deploy: "Manual Deployment",
+        subtab_backup_restore: "Backup & Restore",
+        subtab_api_settings: "API Settings",
+        api_key_label: "Gemini API Key",
+        api_key_placeholder: "Enter your Gemini API key here",
+        api_key_missing: "Gemini API key is not configured. Please add it in the Control Panel.",
+        api_key_saved: "API Key saved successfully!",
+        save_key: "Save Key",
+        summary_generator: "Executive Summary Generator",
+        generate_summary: "Generate Summary",
+        copy_to_clipboard: "Copy to Clipboard",
+        copied: "Copied!",
+        proactive_insights: "Proactive Insights & Forecasts",
+        nlq_placeholder: "Ask a question about the data...",
+        daily_focus_title: "AI Daily Focus",
+        analyzing_data: "Analyzing data...",
+        login_title: "Welcome to Sentinel",
+        login_subtitle: "Please select your role and enter the password to continue",
+        select_role: "Select Role",
+        password: "Password",
+        login: "Login",
+        login_error: "Invalid password for the selected role.",
+        caps_lock_on: "Caps Lock is on",
+        logout: "Log Off",
+        save_data: "Save Data",
+        reset_data: "Reset Data for Today",
+        data_saved_success: "Data saved successfully!",
+        data_reset_success: "Today's report has been reset.",
+        data_saved_error: "Error saving data.",
+        data_reset_error: "Error resetting data.",
+        search_internet: "Search Internet"
+      },
+      he: {
+        app_title: "Project Sentinel v24.1 | Stable & Feature Complete",
+        classification: "רמת סיווג: בלמ\"ס",
+        main_header: "Project Sentinel - Command Nexus",
+        motto: "Eyes on the Horizon, Grip on the Command: Absolute Control, Decisive Action",
+        morning_report: "דו\"ח בוקר",
+        daily_report: "דו\"ח יומי",
+        report_date: "תאריך דו\"ח:",
+        control_panel: "לוח בקרה",
+        export_share: "ייצוא ושיתוף",
+        share_link: "שתף קישור",
+        share_whatsapp: "שתף בוואטסאפ",
+        export_png: "ייצא תמונה (PNG)",
+        backup_data: "גיבוי נתונים",
+        backup_code: "גיבוי קוד מקור",
+        backup_png: "גיבוי תמונת מפקדה (PNG)",
+        diagnostics: "אבחון ותקינות",
+        run_bit: "הרץ בדיקות אינטגרציה",
+        theme_toggle: "שנה ערכת נושא",
+        lang_toggle: "שנה שפה",
+        version_history: "היסטוריית גרסאות",
+        signed_orders_kpi: "סה\"כ חתומות",
+        backlog_gap_kpi: "פער בצבר",
+        pending_orders_kpi: "ממתינות לחתימה",
+        rejected_orders_kpi: "סה\"כ דחויות",
+        ai_insights_title: "מטה אנליטי מבוסס AI",
+        anomaly_detected: "זוהתה אנומליה!",
+        anomaly_desc: "זוהה מספר גבוה חריג של הזמנות דחויות היום (עלייה של 25% לעומת ממוצע 7 ימים).",
+        analyze_anomaly: "נתח אנומליה",
+        scenario_engine_title: "יועץ אסטרטגי",
+        staff_members: "מספר אנשי צוות:",
+        processing_rate: "קצב טיפול (הזמנות ליום/לצוות):",
+        set_goal: "הגדר יעד: סיום ממתינות תוך",
+        days: "ימים",
+        get_action_plan: "קבל תוכנית פעולה",
+        smart_assistant_title: "עוזר אנליטי חכם",
+        ask: "שאל",
+        thinking: "חושב... 🤔",
+        analytical_brain_title: "חמ\"ל אנליטי אינטראקטיבי",
+        scroll_up: "גלילה למעלה",
+        scroll_down: "גלילה למטה",
+        bit_results_title: "תוצאות בדיקת BIT",
+        bit_report_summary_ok: "בדיקת תקינות מערכת עברה בהצלחה. כל הרכיבים פועלים כמצופה.",
+        bit_report_summary_fail: "בדיקת תקינות מערכת זיהתה בעיות. יש לעיין בפירוט.",
+        bit_check_code: "שלמות קוד (בדיקת Hash)",
+        bit_check_functionality: "פונקציונליות (אירועי UI)",
+        bit_check_ui: "UI/UX עקבי",
+        bit_check_api: "קישוריות API",
+        pass: "תקין",
+        fail: "כשל",
+        user_role: "תפקיד משתמש:",
+        admin: "מנהל מערכת",
+        user: "משתמש",
+        card_title_overallStatus: "מצב כללי",
+        card_title_signedOrders: "צבר הזמנות - רצוי מול מצוי",
+        card_title_pendingSignature: "תהליך חתימות (ממתינות)",
+        card_title_rejectedOrders: "הזמנות דחויות",
+        card_subtitle_rejectedOrders: "(באחריות מנה\"פ מול תקציבן)",
+        card_title_pendingAncillaryForm: "ממתינות לטופס נלווה",
+        card_subtitle_pendingAncillaryForm: "(באחריות תקציבן טכנולוגי)",
+        card_title_pendingCorrection: "ממתינות לתיקון",
+        card_subtitle_pendingCorrection: "(באחריות מנה\"פ מול תקציבן)",
+        card_title_pendingAssetNumberEntry: "ממתינות למספר נכס",
+        card_subtitle_pendingAssetNumberEntry: "(באחריות קניין ומבקר איכות)",
+        last_updated: "עדכון אחרון: {time}",
+        deployment_center: "מרכז הפצה",
+        system_file_export: "ייצוא קבצי מערכת (גיבוי ידני)",
+        export_html: "ייצא index.html",
+        tab_command_bridge: "גשר הפיקוד",
+        tab_intelligence_hq: "מטה המודיעין",
+        tab_sharing_center: "מרכז שיתוף",
+        tab_control_panel: "לוח בקרה",
+        subtab_docs_info: "תיעוד ומידע",
+        subtab_version_history: "היסטוריית גרסאות",
+        subtab_diagnostics: "אבחון ותקינות",
+        subtab_deployment_center: "מרכז הפצה",
+        subtab_export_share: "ייצוא ושיתוף",
+        subtab_manual_deploy: "הפצה ידנית",
+        subtab_backup_restore: "גיבוי ושחזור",
+        subtab_api_settings: "הגדרות API",
+        api_key_label: "מפתח API של Gemini",
+        api_key_placeholder: "הזן כאן את מפתח ה-API שלך",
+        api_key_missing: "מפתח API של Gemini אינו מוגדר. יש להוסיף אותו בלוח הבקרה.",
+        api_key_saved: "מפתח API נשמר בהצלחה!",
+        save_key: "שמור מפתח",
+        summary_generator: "מחולל סיכומי מנהלים",
+        generate_summary: "הפק סיכום",
+        copy_to_clipboard: "העתק ללוח",
+        copied: "הועתק!",
+        proactive_insights: "תובנות פרואקטיביות ותחזיות",
+        nlq_placeholder: "שאל שאלה על הנתונים...",
+        daily_focus_title: "פוקוס יומי מבוסס AI",
+        analyzing_data: "מנתח נתונים...",
+        login_title: "ברוכים הבאים ל‑Sentinel",
+        login_subtitle: "אנא בחר תפקיד והזן סיסמה כדי להמשיך",
+        select_role: "בחר תפקיד",
+        password: "סיסמה",
+        login: "כניסה",
+        login_error: "סיסמה שגויה עבור התפקיד שנבחר.",
+        caps_lock_on: "Caps Lock פועל",
+        logout: "התנתק",
+        save_data: "שמור נתונים",
+        reset_data: "אפס נתונים להיום",
+        data_saved_success: "הנתונים נשמרו בהצלחה!",
+        data_reset_success: "הדו\"ח להיום אופס.",
+        data_saved_error: "שגיאה בשמירת הנתונים.",
+        data_reset_error: "שגיאה באיפוס הנתונים.",
+        search_internet: "חפש באינטרנט"
       }
-      return {...state,
-        currentReportId:id,
-        dataForEditing:reportData,
-        liveData:calculateTotals(reportData),
-        previousValues: previousData||{}
+    };
+
+    // Language context
+    const LanguageContext = createContext();
+    const LanguageProvider = ({ children }) => {
+      const [language, setLanguage] = useState(() => {
+        try { return localStorage.getItem('sentinel-lang') || 'he'; }
+        catch { return 'he'; }
+      });
+      useEffect(() => {
+        try {
+          document.documentElement.lang = language;
+          document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr';
+          localStorage.setItem('sentinel-lang', language);
+        } catch {}
+      }, [language]);
+      const toggleLanguage = () => setLanguage(prev => prev === 'he' ? 'en' : 'he');
+      const t = (key, params = {}) => {
+        let s = (translations[language]?.[key]) || key;
+        Object.keys(params).forEach(p => { s = s.replace(`{${p}}`, params[p]); });
+        return s;
       };
+      return (
+        <LanguageContext.Provider value={{language,toggleLanguage:tog toggleLanguage,t:t}}>
+          {children}
+        </LanguageContext.Provider>
+      );
+    };
+    const useTranslation = () => useContext(LanguageContext);
+
+    // Data + Dashboard State
+    const DashboardContext = createContext();
+    const initialReportState = {
+      id: null,
+      signedOrders: 0,
+      existingBacklog: 0,
+      pendingSignature: { 'ענף גזברות': 0, 'רכש, מכרזים ולוגיסטיקה': 0, 'כספים וחשבות': 0 },
+      rejectedOrders: 0,
+      pendingAncillaryForm: 0,
+      pendingCorrection: 0,
+      pendingAssetNumberEntry: 0
+    };
+    const calculateTotals = (data) => {
+      if (!data) return {...initialReportState, computedMetrics:{ totalPending:0, goalPercentage:0, totalPendingSignature:0, backlogDifference:0 }};
+      const totalPendingSignature = Object.values(data.pendingSignature||{}).reduce((a,b)=>a+b,0);
+      const totalPending = totalPendingSignature;
+      const backlogDifference = (data.existingBacklog||0) - (data.signedOrders||0);
+      const goalPercentage = (data.existingBacklog||0) > 0 ? (data.signedOrders||0)/(data.existingBacklog||1)*100 : 0;
+      return {...data, computedMetrics:{ totalPending, goalPercentage, totalPendingSignature, backlogDifference }};
+    };
+    const loadInitialState = () => {
+      try {
+        const storedReports = localStorage.getItem('sentinelReports');
+        const allReports = storedReports ? JSON.parse(storedReports) : {};
+        const lastReportId = localStorage.getItem('sentinelLastSavedReportId');
+        let initialData = initialReportState;
+        if (lastReportId && allReports[lastReportId]) initialData = allReports[lastReportId];
+        return {
+          allReports,
+          currentReportId: lastReportId || null,
+          dataForEditing: JSON.parse(JSON.stringify(initialData)),
+          liveData: calculateTotals(initialData),
+          previousValues: {},
+          lastUpdateInfo: null,
+          notifications: [],
+          userRole: 'user',
+          isAuthenticated: false
+        };
+      } catch {
+        return {
+          allReports:{},
+          currentReportId:null,
+          dataForEditing: JSON.parse(JSON.stringify(initialReportState)),
+          liveData: calculateTotals(initialReportState),
+          previousValues:{},
+          lastUpdateInfo:null,
+          notifications:[],
+          userRole:'user',
+          isAuthenticated:false
+        };
+      }
+    };
+
+    function dashboardReducer(state, action){
+      switch(action.type){
+        case 'LOGIN_SUCCESS':
+          return {...state, isAuthenticated:true, userRole: action.payload.role };
+        case 'LOGOUT':
+          return {...state, isAuthenticated:false, userRole:'user' };
+        case 'LOAD_REPORT':{
+          const {id, previousData} = action.payload;
+          const existingReportData = state.allReports[id];
+          let reportData;
+          if (existingReportData){
+            reportData = JSON.parse(JSON.stringify(existingReportData));
+          } else {
+            const allIds = Object.keys(state.allReports).sort();
+            const lastId = allIds.length ? allIds[allIds.length-1] : null;
+            const lastDoc = lastId ? state.allReports[lastId] : null;
+            const base = (previousData && Object.keys(previousData).length>0) ? previousData : (lastDoc || initialReportState);
+            reportData = JSON.parse(JSON.stringify(base));
+            reportData.id = id;
+          }
+          return {...state, currentReportId:id, dataForEditing:reportData, liveData:calculateTotals(reportData), previousValues: previousData || {} };
+        }
+        case 'SAVE_DATA':{
+          if (state.userRole!=='admin' || !state.currentReportId) return state;
+          const newAllReports = {...state.allReports, [state.currentReportId]: state.dataForEditing};
+          try{
+            localStorage.setItem('sentinelReports', JSON.stringify(newAllReports));
+            localStorage.setItem('sentinelLastSavedReportId', state.currentReportId);
+          }catch{}
+          return {...state, allReports:newAllReports, lastUpdateInfo:{ time: new Date().toLocaleString('he-IL') }};
+        }
+        case 'RESET_TODAY_DATA':{
+          if (state.userRole!=='admin' || !state.currentReportId) return state;
+          const newAllReports = {...state.allReports, [state.currentReportId]: JSON.parse(JSON.stringify(initialReportState))};
+          try{ localStorage.setItem('sentinelReports', JSON.stringify(newAllReports)); }catch{}
+          return {...state, allReports:newAllReports, dataForEditing: JSON.parse(JSON.stringify(initialReportState)), liveData:calculateTotals(initialReportState), lastUpdateInfo:{time:new Date().toLocaleString('he-IL')}};
+        }
+        case 'UPDATE_EDITING_FIELD':{
+          if (state.userRole!=='admin') return state;
+          const {fieldPath,value} = action.payload;
+          const newState = JSON.parse(JSON.stringify(state));
+          let current = newState.dataForEditing;
+          const parts = fieldPath.split('.');
+          for (let i=0;i<parts.length-1;i++){
+            if (!current[parts[i]]) current[parts[i]] = {};
+            current = current[parts[i]];
+          }
+          current[parts[parts.length-1]] = value;
+          newState.liveData = calculateTotals(newState.dataForEditing);
+          return newState;
+        }
+        case 'ADD_NOTIFICATION':
+          if (state.notifications.some(n=>n.text===action.payload.text)) return state;
+          return {...state, notifications:[action.payload, ...state.notifications]};
+        default:
+          return state;
+      }
     }
-    case 'SAVE_DATA':{
-      if(state.userRole!=='admin' || !state.currentReportId) return state;
-      const newAll = {...state.allReports, [state.currentReportId]: state.dataForEditing};
+
+    const DashboardProvider = ({children})=>{
+      const [state, dispatch] = useReducer(dashboardReducer, loadInitialState());
+      return <DashboardContext.Provider value={{state,dispatch}}>{children}</DashboardContext.Provider>;
+    };
+
+    // UI Blocks
+    const SystemLogo = ({ mirrored=false }) => (
+      <div className={`relative w-16 h-16 ${mirrored? 'transform -scale-x-100':''}`}>
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M 10 50 Q 50 20 90 50 Q 50 80 10 50 Z" fill="none" stroke="var(--status-good-primary)" strokeWidth="3"/>
+          <circle cx="50" cy="50" r="10" fill="var(--status-good-primary)"/>
+          <defs>
+            <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color: var(--status-good-glow); stop-opacity: 0"/>
+              <stop offset="100%" style="stop-color: var(--status-good-glow); stop-opacity: 0.7"/>
+            </linearGradient>
+          </defs>
+          <path d="M 50 50 L 90 50 A 40 40 0 0 1 50 10 Z" fill="url(#radar-gradient)" style="transform-origin: 50% 50%; animation: radar-sweep 3s linear infinite"/>
+        </svg>
+      </div>
+    );
+
+    const Clock = ()=>{
+      const [time,setTime]=useState(new Date());
+      useEffect(()=>{
+        const id=setInterval(()=>setTime(new Date()),1000);
+        return ()=>clearInterval(id);
+      },[]);
+      return (
+        <div className="text-lg font-semibold text-slate-400 tabular-nums">
+          <span>{time.toLocaleDateString('he-IL')}</span>
+          <span className="mx-2">|</span>
+          <span>{time.toLocaleTimeString('he-IL')}</span>
+        </div>
+      );
+    };
+
+    const AnimatedNumber = ({n})=>{
+      const [num,setNum]=useState(0);
+      useEffect(()=>{
+        const end = n||0;
+        if (num===end) return;
+        const frameDuration = 1000/60;
+        const totalFrames = Math.round(1000/frameDuration);
+        let frame=0;
+        const counter=setInterval(()=>{
+          frame++;
+          const progress = frame/totalFrames;
+          setNum(Math.round(end*progress));
+          if (frame===totalFrames){ clearInterval(counter); setNum(end); }
+        },frameDuration);
+        return ()=>clearInterval(counter);
+      },[n]);
+      return <span>{num}</span>;
+    };
+
+    // API call: Gemini (optional with local key)
+    async function callGeminiAPI(prompt, t, showMessage, jsonSchema=null, useGrounding=false){
+      const apiKey = localStorage.getItem('sentinel-apiKey');
+      if (!apiKey){
+        const msg = t('api_key_missing');
+        if (showMessage) showMessage(msg,true);
+        return jsonSchema ? JSON.stringify({answer:msg,chartData:null}) : msg;
+      }
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+      const payload = { contents:[{parts:[{text:prompt}]}] };
+      if (jsonSchema){
+        payload.generationConfig = { responseMimeType:"application/json", responseSchema: jsonSchema };
+      }
+      if (useGrounding){
+        payload.tools = [{googleSearch:{}}];
+      }
       try{
-        localStorage.setItem('sentinelReports', JSON.stringify(newAll));
-        localStorage.setItem('sentinelLastSavedReportId', state.currentReportId);
-      }catch(e){}
-      return {...state, allReports:newAll, lastUpdateInfo:{ time:new Date().toLocaleString('he-IL') }};
-    }
-    case 'RESET_TODAY_DATA':{
-      if(state.userRole!=='admin' || !state.currentReportId) return state;
-      const newAll = {...state.allReports, [state.currentReportId]: JSON.parse(JSON.stringify(initialReportState))};
-      try{ localStorage.setItem('sentinelReports', JSON.stringify(newAll)); }catch(e){}
-      return {...state,
-        allReports:newAll,
-        dataForEditing: JSON.parse(JSON.stringify(initialReportState)),
-        liveData: calculateTotals(initialReportState),
-        lastUpdateInfo:{ time:new Date().toLocaleString('he-IL') }
-      };
-    }
-    case 'UPDATE_EDITING_FIELD':{
-      if(state.userRole!=='admin') return state;
-      const {fieldPath,value} = action.payload;
-      const newState = JSON.parse(JSON.stringify(state));
-      let current = newState.dataForEditing;
-      const parts = fieldPath.split('.');
-      for(let i=0;i<parts.length-1;i++){
-        if(typeof current[parts[i]]!=='object' || current[parts[i]]===null) current[parts[i]] = {};
-        current = current[parts[i]];
+        const res = await fetch(API_URL,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok){
+          const body = await res.json().catch(()=>({}));
+          throw new Error(`HTTP ${res.status}: ${body?.error?.message || 'Unknown error'}`);
+        }
+        const body = await res.json();
+        const part = body?.candidates?.?.content?.parts?.;
+        if (!part?.text) throw new Error('Invalid response shape');
+        return part.text;
+      }catch(err){
+        const msg = `שגיאה בתקשורת עם שירות ה-AI: ${err.message}`;
+        if (showMessage) showMessage(msg,true);
+        return jsonSchema ? JSON.stringify({answer:msg,chartData:null}) : msg;
       }
-      current[parts[parts.length-1]] = (+value||0);
-      newState.liveData = calculateTotals(newState.dataForEditing);
-      return newState;
     }
-    case 'ADD_NOTIFICATION':
-      if(state.notifications.some(n=>n.text===action.payload.text)) return state;
-      return {...state, notifications:[action.payload, ...state.notifications]};
-    default: return state;
-  }
-}
 
-const DashboardProvider = ({children})=>{
-  const [state,dispatch] = useReducer(dashboardReducer, loadInitialState());
-  return <DashboardContext.Provider value={{state,dispatch}}>{children}</DashboardContext.Provider>;
-};
-
-/* ============== Versioning & Cards ============== */
-const versionHistory = [
-  {version:24.1, date:'02/09/2025', description:"רציפות נתונים מלאה, גיבוי/שחזור פשוטים, מדריך הפצה מובנה."},
-  {version:23.1, date:'02/09/2025', description:"תיקון CLS, שדרוג עלון ההפעלה."},
-  {version:23.0, date:'02/09/2025', description:"ליבת נתונים יציבה, צ'אט AI נשלט ידנית, ותובנות פרואקטיביות."},
-  {version:22.3, date:'02/09/2025', description:"ייצוב קריסה ואיחוד לקובץ יחיד."}
-];
-
-const cardDefinitions = {
-  overallStatus: { titleKey:'card_title_overallStatus', color:'teal', icon:'fa-tachometer-alt' },
-  signedOrders: { titleKey:'card_title_signedOrders', color:'teal', icon:'fa-check-double' },
-  pendingSignature: { titleKey:'card_title_pendingSignature', color:'purple', icon:'fa-signature' },
-  rejectedOrders: { titleKey:'card_title_rejectedOrders', subtitleKey:'card_subtitle_rejectedOrders', color:'red', icon:'fa-times-circle' },
-  pendingAncillaryForm: { titleKey:'card_title_pendingAncillaryForm', subtitleKey:'card_subtitle_pendingAncillaryForm', color:'orange', icon:'fa-file-alt' },
-  pendingCorrection: { titleKey:'card_title_pendingCorrection', subtitleKey:'card_subtitle_pendingCorrection', color:'blue', icon:'fa-edit' },
-  pendingAssetNumberEntry: { titleKey:'card_title_pendingAssetNumberEntry', subtitleKey:'card_subtitle_pendingAssetNumberEntry', color:'yellow', icon:'fa-barcode' }
-};
-
-/* ============== AI Calls (safe, opt-in) ============== */
-async function callGeminiAPI(prompt, t, showMessage, jsonSchema=null, useGrounding=false){
-  const apiKey = (()=>{
-    try{ return localStorage.getItem('sentinel-apiKey') || '' }catch(e){ return '' }
-  })();
-  if(!apiKey){
-    const msg = t('api_key_missing');
-    if(showMessage) showMessage(msg, true);
-    return jsonSchema ? JSON.stringify({answer:msg, chartData:null}) : msg;
-  }
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-  const payload = {
-    contents:[{parts:[{text:prompt}]}]
-  };
-  if(jsonSchema){
-    payload.generationConfig = {
-      responseMimeType: "application/json",
-      responseSchema: jsonSchema
-    };
-  }
-  if(useGrounding){
-    payload.tools = [{googleSearch:{}}];
-  }
-  try{
-    const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-    if(!res.ok){
-      let err = '';
-      try{ const eb = await res.json(); err = (eb?.error?.message)||'' }catch(e){}
-      throw new Error(`HTTP ${res.status} ${err}`);
-    }
-    const result = await res.json();
-    const text = result?.candidates?.?.content?.parts?.?.text;
-    if(!text) throw new Error('Invalid response structure');
-    return text;
-  }catch(err){
-    const msg = `שגיאת AI: ${err.message}`;
-    if(showMessage) showMessage(msg, true);
-    return jsonSchema ? JSON.stringify({answer:msg, chartData:null}) : msg;
-  }
-}
-
-/* ============== App Shell ============== */
-const App = ()=>{
-  const {state} = useContext(DashboardContext);
-  const {language} = useTranslation();
-  if(!state.isAuthenticated) return <LoginScreen key={language} />;
-  return <MainDashboard key={language} />;
-};
-
-/* ============== Login ============== */
-const LoginScreen = ()=>{
-  const {dispatch} = useContext(DashboardContext);
-  const {t, language, toggleLanguage} = useTranslation();
-  const [role,setRole] = useState('user');
-  const [password,setPassword] = useState('');
-  const [error,setError] = useState('');
-  const [isLoading,setIsLoading] = useState(false);
-  const [isPasswordVisible,setIsPasswordVisible] = useState(false);
-  const [isCapsOn,setIsCapsOn] = useState(false);
-
-  const passwords = { user:'57919021', admin:'Myosy2002' };
-
-  const handleLogin = (e)=>{
-    e.preventDefault();
-    setIsLoading(true); setError('');
-    setTimeout(()=>{
-      if(passwords[role]===password){
-        dispatch({type:'LOGIN_SUCCESS', payload:{role}});
-      }else{
-        setError(t('login_error'));
-      }
-      setIsLoading(false);
-    },700);
-  };
-  const checkCapsLock = (e)=>{
-    if(e.getModifierState) setIsCapsOn(e.getModifierState('CapsLock'));
-  };
-
-  return (
-    <div className="flex items-center justify-center min-h-screen login-background">
-      <div className="relative w-full max-w-md p-8 space-y-8 bg-[--bg-secondary]/80 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-500/20 fade-in-on-load">
-        <div className="absolute top-4 left-4 rtl:left-auto rtl:right-4">
-          <button onClick={toggleLanguage} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center font-bold text-sm hover:text-[--text-primary] transition-colors" title={t('lang_toggle')}>
-            {language==='he'?'EN':'HE'}
-          </button>
-        </div>
-        <div className="text-center">
-          <div className="inline-block pulsing-logo"><SystemLogo/></div>
-          <h2 className="mt-6 text-3xl font-bold text-center text-[--text-primary]">{t('login_title')}</h2>
-          <p className="mt-2 text-center text-sm text-teal-400">{t('login_subtitle')}</p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="relative">
-            <select value={role} onChange={e=>setRole(e.target.value)} className="w-full p-3 bg-[--bg-primary]/70 border-2 border-[--border-color] rounded-md appearance-none text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
-              <option className="text-black" value="user">{t('user')}</option>
-              <option className="text-black" value="admin">{t('admin')}</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[--text-secondary]"><i className="fas fa-chevron-down"></i></div>
-          </div>
-          <div className="relative">
-            <button type="button" onClick={()=>setIsPasswordVisible(v=>!v)} className="absolute top-3.5 left-3 text-[--text-secondary] hover:text-teal-400 transition-colors z-10"><i className={`fas ${isPasswordVisible?'fa-eye-slash':'fa-eye'}`}></i></button>
-            <input type={isPasswordVisible?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} onKeyUp={checkCapsLock} onKeyDown={checkCapsLock} placeholder={t('password')} className="w-full p-3 pl-10 bg-[--bg-primary]/70 border-2 border-[--border-color] rounded-md text-[--text-primary] placeholder:text-[--text-secondary] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" required />
-          </div>
-          {isCapsOn && <p className="text-xs text-yellow-400 text-center flex items-center justify-center gap-2"><i className="fas fa-exclamation-circle"></i> {t('caps_lock_on')}</p>}
-          {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-          <div>
-            <button type="submit" disabled={isLoading} className="group relative w-full flex justify-center py-3 px-4 rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 transition-all transform hover:scale-105 active:scale-100">
-              {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : t('login')}
+    // Components
+    const TopBar = ({theme,toggleTheme})=>{
+      const {language,toggleLanguage,t} = useTranslation();
+      const {state,dispatch} = useContext(DashboardContext);
+      const userRole = state.userRole;
+      const notifications = state.notifications;
+      const handleLogout = ()=>dispatch({type:'LOGOUT'});
+      return (
+        <div className="flex justify-between items-center mb-5">
+          <div></div>
+          <div className="flex items-center gap-2">
+            <div className="bg-[--bg-secondary] text-[--text-primary] border border-[--border-color] rounded-full text-xs px-3 py-1 flex items-center gap-2">
+              <span>{t('user_role')}</span><span className="font-bold">{t(userRole)}</span>
+            </div>
+            <button className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center relative hover:text-[--text-primary] transition-colors" title="התראות">
+              <i className="fas fa-bell"></i>
+              {notifications.length>0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">{notifications.length}</span>}
+            </button>
+            <button onClick={toggleLanguage} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center font-bold text-sm hover:text-[--text-primary] transition-colors" title={t('lang_toggle')}>
+              {language==='he'?'EN':'HE'}
+            </button>
+            <button onClick={toggleTheme} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center hover:text-[--text-primary] transition-colors" title={t('theme_toggle')}>
+              {theme==='theme-dark'? <i className="fas fa-sun"></i>:<i className="fas fa-moon"></i>}
+            </button>
+            <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-[--bg-secondary] text-[--text-secondary] border border-[--border-color] flex items-center justify-center hover:text-[--text-primary] transition-colors" title={t('logout')}>
+              <i className="fas fa-sign-out-alt"></i>
             </button>
           </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-/* ============== Main Dashboard ============== */
-const MainDashboard = ()=>{
-  const {state,dispatch} = useContext(DashboardContext);
-  const userRole = state.userRole;
-  const {t,language} = useTranslation();
-
-  const [reportDate,setReportDate] = useState(()=>{
-    try{
-      const last = localStorage.getItem('sentinelLastSavedReportId');
-      if(last){ const p = last.split('-'); if(p.length>=3){ const d = p.slice(0,3).join('-'); if(!isNaN(new Date(d).getTime())) return d; } }
-    }catch(e){}
-    return new Date().toISOString().split('T');
-  });
-
-  const [currentReportType,setCurrentReportType] = useState(()=>{
-    try{
-      const last = localStorage.getItem('sentinelLastSavedReportId');
-      if(last){ const p = last.split('-'); if(p.length>=4) return p; }[1]
-    }catch(e){}
-    return 'morning';
-  });
-
-  useEffect(()=>{
-    const id = `${reportDate}-${currentReportType}`;
-    const prevId = (()=>{
-      const d = new Date(reportDate);
-      if(currentReportType==='daily') return `${reportDate}-morning`;
-      d.setDate(d.getDate()-1);
-      return `${d.toISOString().split('T')}-daily`;
-    })();
-    try{
-      const all = JSON.parse(localStorage.getItem('sentinelReports')||'{}');
-      dispatch({type:'LOAD_REPORT', payload:{id, previousData: all[prevId] || {}}});
-    }catch(e){
-      dispatch({type:'LOAD_REPORT', payload:{id, previousData:{}}});
-    }
-  },[reportDate, currentReportType, dispatch]);
-
-  const [message,setMessage] = useState({text:'', isError:false, visible:false});
-  const [theme,setTheme] = useState(()=>{ try{ return localStorage.getItem('sentinel-theme') || 'theme-dark' }catch(e){ return 'theme-dark' }});
-  const [activeModal,setActiveModal] = useState(null);
-  const [activeTab,setActiveTab] = useState('command_bridge');
-  const [activeControlPanelTab,setActiveControlPanelTab] = useState('backup_restore');
-  const [isAiGenerating,setIsAiGenerating] = useState(false);
-  const infographicContainerRef = useRef(null);
-
-  // Apply theme on mount
-  useEffect(()=>{
-    try{
-      const saved = localStorage.getItem('sentinel-theme') || 'theme-dark';
-      setTheme(saved);
-      const html = document.documentElement;
-      const body = document.body;
-      html.classList.remove('light','dark');
-      body.classList.remove('theme-light','theme-dark');
-      const isDark = saved==='theme-dark';
-      html.classList.add(isDark?'dark':'light');
-      body.classList.add(saved);
-    }catch(e){}
-  },[]);
-
-  useEffect(()=>{ document.title = t('app_title'); },[t]);
-
-  useEffect(()=>{
-    let timer;
-    if(message.visible) timer = setTimeout(()=>setMessage(m=>({...m,visible:false})), 4000);
-    return ()=> clearTimeout(timer);
-  },[message]);
-
-  const showMessage = useCallback((text, isError=false)=> setMessage({text,isError,visible:true}),[]);
-
-  const toggleTheme = ()=>{
-    try{
-      const old = theme;
-      const next = theme==='theme-dark' ? 'theme-light' : 'theme-dark';
-      setTheme(next); localStorage.setItem('sentinel-theme', next);
-      const html = document.documentElement;
-      const body = document.body;
-      html.classList.remove(old==='theme-dark'?'dark':'light');
-      body.classList.remove(old);
-      html.classList.add(next==='theme-dark'?'dark':'light');
-      body.classList.add(next);
-    }catch(e){}
-  };
-
-  const getFormattedFileName = (ext)=>{
-    const now = new Date();
-    const date = now.toISOString().split('T');
-    const time = now.toTimeString().split(' ').replace(/:/g,'-');
-    return `Project-Sentinel-Command-Nexus-v24.1-${date}-${time}.${ext}`;
+        </div>
+      );
     };
 
-  const handleExport = async ()=>{
-    const el = infographicContainerRef.current;
-    if(!el){ showMessage("שגיאה: אלמנט לא נמצא", true); return; }
-    showMessage("מכין ייצוא...");
-    try{
-      // freeze animations
-      const prevChartAnim = Chart.defaults.animation;
-      Chart.defaults.animation = false;
-      const prevBodyAnim = document.body.style.animation;
-      document.body.style.animation = 'none';
+    const DashboardHeader = ({currentReportType,reportDate})=>{
+      const {t,language} = useTranslation();
+      return (
+        <div className="text-center mb-8">
+          <div className="flex justify-center items-center gap-4 mb-2">
+            <SystemLogo/>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-[--text-primary] break-words">{t('main_header')}</h1>
+              <p className="text-sm text-[--text-secondary]">{t('classification')}</p>
+            </div>
+            <SystemLogo mirrored/>
+          </div>
+          <div className="flex flex-col items-center">
+            <p className="text-md text-teal-300 italic">{t('motto')}</p>
+            <div className="w-1/3 h-px bg-teal-500/50 mt-2"></div>
+          </div>
+          <p className="text-md text-[--text-secondary] mt-4">
+            {currentReportType==='morning'?t('morning_report'):t('daily_report')} - {new Date(reportDate).toLocaleDateString(language==='he'?'he-IL':'en-CA')}
+          </p>
+        </div>
+      );
+    };
 
-      const canvas = await html2canvas(el, {
-        backgroundColor: document.body.classList.contains('theme-dark') ? '#0f172a' : '#f1f5f9',
-        scale:2, useCORS:true, logging:false, windowWidth: el.scrollWidth, windowHeight: el.scrollHeight
-      });
-      const fileName = getFormattedFileName('png');
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png'); link.download = fileName; link.click();
+    const AnimatedDelta = ({value,direction,color})=>{
+      if (value===undefined || direction==='neutral') return null;
+      return (
+        <span className={`text-xs flex items-center gap-1 ${color}`}>
+          <i className={`fas fa-arrow-${direction}`}></i>{Math.abs(value)}
+        </span>
+      );
+    };
 
-      // restore
-      Chart.defaults.animation = prevChartAnim;
-      document.body.style.animation = prevBodyAnim;
-    }catch(e){
-      showMessage("שגיאה ביצירת הקובץ.", true);
-    }
-  };
+    const KpiStrip = ()=>{
+      const {state}=useContext(DashboardContext);
+      const {t}=useTranslation();
+      const liveData = state.liveData;
+      const previous = calculateTotals(state.previousValues || {}).computedMetrics;
 
-  const handleDateChange = (days)=>{
-    const d = new Date(reportDate);
-    d.setDate(d.getDate()+days);
-    setReportDate(d.toISOString().split('T'));
-  };
+      const getDelta=(current,prev,allowGray=false)=>{
+        if (prev===undefined || current===undefined || !state.previousValues || Object.keys(state.previousValues).length===0) return {value:undefined};
+        const d = current-prev;
+        const direction = d>0?'up':d<0?'down':'neutral';
+        return {value:d,direction,allowGray};
+      };
 
-  const handleShareLink = ()=>{
-    try{
-      const ta = document.createElement('textarea');
-      ta.value = window.location.href;
-      document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      showMessage("הקישור הועתק ללוח!");
-    }catch(e){ showMessage("שגיאה בהעתקת הקישור.", true); }
-  };
+      const kpis = [
+        {
+          label: t('signed_orders_kpi'),
+          value: liveData?.signedOrders||0,
+          type:'good',
+          delta:getDelta(liveData?.signedOrders, state.previousValues?.signedOrders,true),
+          posGood:true
+        },
+        {
+          label: t('backlog_gap_kpi'),
+          value: liveData?.computedMetrics?.backlogDifference||0,
+          type:'warning',
+          delta:getDelta(liveData?.computedMetrics?.backlogDifference, previous?.backlogDifference),
+          posGood:false
+        },
+        {
+          label: t('pending_orders_kpi'),
+          value: liveData?.computedMetrics?.totalPendingSignature||0,
+          type:'warning',
+          delta:getDelta(liveData?.computedMetrics?.totalPendingSignature, previous?.totalPendingSignature),
+          posGood:false
+        },
+        {
+          label: t('rejected_orders_kpi'),
+          value: liveData?.rejectedOrders||0,
+          type:'critical',
+          delta:getDelta(liveData?.rejectedOrders, state.previousValues?.rejectedOrders),
+          posGood:false
+        }
+      ];
 
-  const handleSaveData = ()=>{
-    dispatch({type:'SAVE_DATA'});
-    showMessage(t('data_saved_success'));
-    setIsAiGenerating(true);
-  };
-  const handleResetData = ()=>{
-    dispatch({type:'RESET_TODAY_DATA'});
-    showMessage(t('data_reset_success'));
-  };
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          {kpis.map((k,i)=>{
+            let color = 'text-gray-400';
+            if (k.delta?.direction==='up') color = k.posGood?'text-teal-400':'text-red-400';
+            else if (k.delta?.direction==='down') color = k.posGood?'text-red-400':'text-teal-400';
+            if (k.delta?.allowGray && k.delta?.direction==='down') color='text-gray-400';
+            return (
+              <div key={k.label} className="bg-[--bg-secondary] p-4 rounded-xl border border-[--border-color] text-center transition-all duration-300 transform hover:scale-105 hover:shadow-lg fade-in-on-load" style={{animationDelay:`${i*100}ms`}}>
+                <div className={`text-3xl font-bold flex items-center justify-center gap-2 ${k.type==='good'?'text-teal-400':k.type==='warning'?'text-blue-400':'text-red-400'}`}>
+                  <AnimatedNumber n={k.value}/>
+                  <AnimatedDelta value={k.delta?.value} direction={k.delta?.direction} color={color}/>
+                </div>
+                <div className="text-xs text-[--text-secondary] mt-1">{k.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
 
-  const TabNavigation = ()=>(
-    <div className="flex p-1 space-x-1 rtl:space-x-reverse bg-[--bg-secondary] rounded-xl shadow-lg border border-[--border-color]">
-      <button className={`w-full py-2.5 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab==='command_bridge'?'bg-teal-500 text-white shadow':''} ${activeTab!=='command_bridge'?'text-[--text-secondary] hover:bg-[--bg-tertiary]':''}`} onClick={()=>setActiveTab('command_bridge')}>
-        <i className="fas fa-tachometer-alt"></i> {t('tab_command_bridge')}
-      </button>
-      <button className={`w-full py-2.5 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab==='intelligence_hq'?'bg-teal-500 text-white shadow':''} ${activeTab!=='intelligence_hq'?'text-[--text-secondary] hover:bg-[--bg-tertiary]':''}`} onClick={()=>setActiveTab('intelligence_hq')}>
-        <i className="fas fa-brain"></i> {t('tab_intelligence_hq')}
-      </button>
-      <button class
+    const NumericInputWithArrows = ({value,onChange,path,disabled,delta,isIncreaseGood=false,specialRule=null})=>{
+      const intervalRef = useRef(null);
+      const timeoutRef = useRef(null);
+      const handleValueChange = (inc)=>{
+        const current = parseInt(value,10)||0;
+        const next = Math.max(0,current+inc);
+        onChange(path,next);
+      };
+      const startPress=(inc)=>{
+        handleValueChange(inc);
+        timeoutRef.current=setTimeout(()=>{
+          intervalRef.current=setInterval(()=>handleValueChange(inc),100);
+        },500);
+      };
+      const stopPress=()=>{
+        clearTimeout(timeoutRef.current);
+        clearInterval(intervalRef.current);
+      };
+      let color='text-gray-400';
+      if (delta?.direction==='up') color = isIncreaseGood?'text-teal-400':'text-red-400';
+      else if (delta?.direction==='down') color = isIncreaseGood?'text-red-400':'text-teal-400';
+      if (specialRule==='signed' && delta?.direction==='down') color='text-gray-400';
+      if (specialRule==='backlog' && delta?.direction==='down') color='text-gray-400';
 
-[1](https://stackoverflow.com/questions/57787209/safari-does-not-support-indexeddb-databases)
-[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/71936845/fe3bba45-0852-4980-abb0-5c944865e858/paste-2.txt)
+      return (
+        <div className="flex items-center gap-2 justify-end">
+          {delta && delta.value!==undefined && delta.direction!=='neutral' && (
+            <span className={`text-sm flex items-center gap-1 ${color}`}>
+              <i className={`fas fa-arrow-${delta.direction}`}></i>{Math.abs(delta.value)}
+            </span>
+          )}
+          <div className="flex flex-col gap-1">
+            <button className="w-8 h-8 bg-[--bg-tertiary] rounded-md flex items-center justify-center disabled:opacity-50 transition-transform transform hover:scale-110 active:scale-95"
+              onClick={()=>handleValueChange(1)}
+              onMouseDown={()=>startPress(1)} onMouseUp={stopPress} onMouseLeave={stopPress}
+              onTouchStart={()=>startPress(1)} onTouchEnd={stopPress}
+              disabled={disabled}><i className="fas fa-chevron-up"></i></button>
+            <button className="w-8 h-8 bg-[--bg-tertiary] rounded-md flex items-center justify-center disabled:opacity-50 transition-transform transform hover:scale-110 active:scale-95"
+              onClick={()=>handleValueChange(-1)}
+              onMouseDown={()=>startPress(-1)} onMouseUp={stopPress} onMouseLeave={stopPress}
+              onTouchStart={()=>startPress(-1)} onTouchEnd={stopPress}
+              disabled={disabled}><i className="fas fa-chevron-down"></i></button>
+          </div>
+          <input className="w-20 p-2 text-2xl font-bold text-center bg-[--bg-secondary] border border-[--border-color] rounded-lg disabled:bg-[--bg-tertiary]"
+            type="number" value={value}
+            onChange={e=>onChange(path, parseInt(e.target.value,10)||0)}
+            disabled={disabled}/>
+        </div>
+      );
+    };
+
+    const cardDefinitions = {
+      overallStatus: { titleKey:'card_title_overallStatus', color:'teal', icon:'fa-tachometer-alt' },
+      signedOrders: { titleKey:'card_title_signedOrders', color:'teal', icon:'fa-check-double' },
+      pendingSignature: { titleKey:'card_title_pendingSignature', color:'purple', icon:'fa-signature' },
+      rejectedOrders: { titleKey:'card_title_rejectedOrders', subtitleKey:'card_subtitle_rejectedOrders', color:'red', icon:'fa-times-circle' },
+      pendingAncillaryForm: { titleKey:'card_title_pendingAncillaryForm', subtitleKey:'card_subtitle_pendingAncillaryForm', color:'orange', icon:'fa-file-alt' },
+      pendingCorrection: { titleKey:'card_title_pendingCorrection', subtitleKey:'card_subtitle_pendingCorrection', color:'blue', icon:'fa-edit' },
+      pendingAssetNumberEntry: { titleKey:'card_title_pendingAssetNumberEntry', subtitleKey:'card_subtitle_pendingAssetNumberEntry', color:'yellow', icon:'fa-barcode' }
+    };
+
+    const SectionCard = ({id, triggerAi, showMessage})=>{
+      const {state,dispatch} = useContext(DashboardContext);
+      const {t} = useTranslation();
+      const dataForEditing = state.dataForEditing || initialReportState;
+      const liveData = state.liveData || calculateTotals(initialReportState);
+      const previousValues = state.previousValues || {};
+      const userRole = state.userRole;
+      const lastUpdateInfo = state.lastUpdateInfo;
+      const cardId = id.replace('card-','');
+      const cardInfo = cardDefinitions[cardId];
+
+      const chartRef = useRef(null);
+      const canvasRef = useRef(null);
+      const theme = document.body.className;
+
+      const [aiInsight,setAiInsight] = useState('');
+      const [isInsightLoading,setIsInsightLoading] = useState(false);
+
+      const signingOrder = ['כספים וחשבות','רכש, מכרזים ולוגיסטיקה','ענף גזברות'];
+      const departmentIcons = {
+        'כספים וחשבות': 'fa-file-invoice-dollar',
+        'רכש, מכרזים ולוגיסטיקה': 'fa-gavel',
+        'ענף גזברות': 'fa-stamp'
+      };
+
+      const generateCardInsight = useCallback(async ()=>{
+        if (cardId!=='overallStatus' || !liveData || !previousValues || Object.keys(previousValues).length===0) return;
+        setIsInsightLoading(true);
+        const prompt = `נתח בקצרה את השינוי המשמעותי ביותר בין הנתונים הקודמים לנוכחיים במשפט אחד בעברית. קודמים: ${JSON.stringify(previousValues)}. נוכחיים: ${JSON.stringify(liveData)}.`;
+        try{
+          const resp = await callGeminiAPI(prompt,t,showMessage);
+          setAiInsight(resp);
+        }catch{
+          setAiInsight('שגיאה בהפקת תובנה.');
+        }finally{
+          setIsInsightLoading(false);
+        }
+      },[cardId,liveData,previousValues,t,showMessage]);
+
+      useEffect(()=>{
+        if (triggerAi && cardId==='overallStatus') generateCardInsight();
+      },[triggerAi,cardId,generateCardInsight]);
+
+      useEffect(()=>{
+        if (chartRef.current) chartRef.current.destroy();
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        if (cardId==='overallStatus' && liveData?.computedMetrics){
+          chartRef.current = new Chart(ctx,{
+            type:'bar',
+            data:{
+              labels:['חתומות','ממתינות','דחויות'],
+              datasets:[
+                {
+                  label:'לפני',
+                  data:[previousValues.signedOrders||0, calculateTotals(previousValues).computedMetrics.totalPending||0, previousValues.rejectedOrders||0],
+                  backgroundColor:'rgba(148,163,184,0.5)'
+                },
+                {
+                  label:'אחרי',
+                  data:[liveData.signedOrders, liveData.computedMetrics.totalPending, liveData.rejectedOrders],
+                  backgroundColor:['#2dd4bf','#3b82f6','#f87171']
+                }
+              ]
+            },
+            options:{
+              responsive:true, maintainAspectRatio:false,
+              plugins:{
+                legend:{ labels:{ color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } },
+                datalabels:{ color:'#fff' }
+              }
+            }
+          });
+        } else if (cardId==='pendingSignature' && dataForEditing?.pendingSignature){
+          chartRef.current = new Chart(ctx,{
+            type:'bar',
+            data:{
+              labels: signingOrder,
+              datasets:[
+                {
+                  label:'לפני',
+                  data: signingOrder.map(l => previousValues?.pendingSignature?.[l]||0),
+                  backgroundColor:'rgba(148,163,184,0.5)'
+                },
+                {
+                  label:'אחרי',
+                  data: signingOrder.map(l => dataForEditing?.pendingSignature?.[l]||0),
+                  backgroundColor:'#a78bfa'
+                }
+              ]
+            },
+            options:{
+              responsive:true, maintainAspectRatio:false,
+              plugins:{
+                legend:{ labels:{ color: theme.includes('dark') ? '#e2e8f0' : '#0f172a' } },
+                datalabels:{ color:'#fff' }
+              }
+            }
+          });
+        }
+      },[liveData,dataForEditing,theme,cardId,previousValues]);
+
+      const handleInputChange = (fieldPath,value)=>{
+        dispatch({type:'UPDATE_EDITING_FIELD', payload:{fieldPath,value}});
+      };
+      const getDeltaForField = (fieldPath)=>{
+        const parts = fieldPath.split('.');
+        let current = dataForEditing;
+        let previous = previousValues;
+        for (const p of parts){
+          current = current?.[p];
+          previous = previous?.[p];
+        }
+        if (previous===undefined || current===undefined || !previousValues || Object.keys(previousValues).length===0) return {value:undefined};
+        const delta = current - previous;
+        const direction = delta>0?'up':delta<0?'down':'neutral';
+        return {value:delta, direction};
+      };
+
+      let title = t(cardInfo.titleKey);
+      if (cardId==='pendingSignature'){
+        title = `${title} (${liveData?.computedMetrics?.totalPendingSignature || 0})`;
+      }
+      if (cardId==='signedOrders'){
+        title = `${t(cardInfo.titleKey)} (${liveData?.computedMetrics?.backlogDifference || 0})`;
+      }
+
+      const renderContent = ()=>{
+        if (cardId==='overallStatus'){
+          return (
+            <>
+              <div className="h-48 mt-4"><canvas ref={canvasRef}/></div>
+              {isInsightLoading ? <div className="h-6 mt-2 skeleton-loader rounded-md"></div> :
+                <p className="text-sm text-center text-teal-300 mt-2 italic h-6">{aiInsight}</p>}
+            </>
+          );
+        }
+        if (cardId==='signedOrders'){
+          return (
+            <>
+              <div className="flex justify-between items-center mb-3">
+                <p>{t('signed_orders_kpi')}</p>
+                <NumericInputWithArrows
+                  value={dataForEditing.signedOrders}
+                  onChange={handleInputChange}
+                  path="signedOrders"
+                  disabled={userRole!=='admin'}
+                  delta={getDeltaForField("signedOrders")}
+                  isIncreaseGood={true}
+                  specialRule="signed"
+                />
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <p>{t('backlog_gap_kpi')}</p>
+                <NumericInputWithArrows
+                  value={dataForEditing.existingBacklog}
+                  onChange={handleInputChange}
+                  path="existingBacklog"
+                  disabled={userRole!=='admin'}
+                  delta={getDeltaForField("existingBacklog")}
+                  isIncreaseGood={false}
+                  specialRule="backlog"
+                />
+              </div>
+              <div className="w-full h-2 bg-[--bg-tertiary] rounded-full overflow-hidden mt-2.5">
+                <div className="h-full bg-teal-500 rounded-full transition-all duration-500"
+                     style={{width:`${(liveData?.computedMetrics?.goalPercentage||0).toFixed(1)}%`}}></div>
+              </div>
+            </>
+          );
+        }
+        if (cardId==='pendingSignature'){
+          const reversed = [...signingOrder].reverse();
+          return (
+            <>
+              <div className="h-48 mb-5"><canvas ref={canvasRef}/></div>
+              <div className="space-y-3">
+                {reversed.map(branch=>(
+                  <div className="flex justify-between items-center" key={branch}>
+                    <p className="flex items-center gap-2">
+                      <i className={`fas ${departmentIcons[branch]}`}></i>{branch}
+                    </p>
+                    <NumericInputWithArrows
+                      value={dataForEditing.pendingSignature?.[branch] || 0}
+                      onChange={handleInputChange}
+                      path={`pendingSignature.${branch}`}
+                      disabled={userRole!=='admin'}
+                      delta={getDeltaForField(`pendingSignature.${branch}`)}
+                      isIncreaseGood={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          );
+        }
+        if (['rejectedOrders','pendingAncillaryForm','pendingCorrection','pendingAssetNumberEntry'].includes(cardId)){
+          return (
+            <div className="flex justify-center items-center h-full">
+              <NumericInputWithArrows
+                value={dataForEditing[cardId]||0}
+                onChange={handleInputChange}
+                path={cardId}
+                disabled={userRole!=='admin'}
+                delta={getDeltaForField(cardId)}
+                isIncreaseGood={false}
+              />
+            </div>
+          );
+        }
+        return <div className="text-center">אין תצוגה זמינה</div
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/71936845/9113c8e2-9884-4756-95df-0540b46016f4/paste.txt)
